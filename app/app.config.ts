@@ -8,7 +8,7 @@ export default defineAppConfig({
         },
         header: {
             slots: {
-                root: 'h-28'
+                root: 'h-20 sm:h-28'
             }
         },
         navigationMenu: {

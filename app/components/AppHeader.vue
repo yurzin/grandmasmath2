@@ -26,7 +26,7 @@ const links = computed<NavigationMenuItem[]>(() => [{
 <template>
   <UHeader>
     <template #left>
-      <AppLogo class="h-20 w-auto"/>
+      <AppLogo class="h-14 sm:h-20 w-auto"/>
     </template>
 
     <UNavigationMenu :items="links"/>

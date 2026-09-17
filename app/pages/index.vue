@@ -44,8 +44,8 @@ const { data: pins, pending } = await useFetch<Task[]>('/api/tasks', { query })
 
 <template>
   <div>
-    <div class="px-4 sm:px-6 pt-4 sm:pt-6">
-      <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 rounded-xl border border-default bg-default p-4 shadow-sm">
+    <div class="px-3 sm:px-6 pt-3 sm:pt-6">
+      <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2.5 sm:gap-3 rounded-xl border border-default bg-default p-3 sm:p-4 shadow-sm">
         <div class="flex items-center gap-2 text-sm font-medium text-highlighted">
           <UIcon name="i-lucide-sliders-horizontal" class="size-4 text-primary"/>
           Фильтры
@@ -86,7 +86,8 @@ const { data: pins, pending } = await useFetch<Task[]>('/api/tasks', { query })
             icon="i-lucide-x"
             color="neutral"
             variant="ghost"
-            class="cursor-pointer sm:ml-auto"
+            block
+            class="cursor-pointer sm:w-auto sm:ml-auto"
             @click="resetFilters"
         >
           Сбросить фильтры
@@ -94,16 +95,16 @@ const { data: pins, pending } = await useFetch<Task[]>('/api/tasks', { query })
       </div>
     </div>
 
-    <p v-if="pending" class="px-4 sm:px-6 pt-6 text-muted">Загрузка…</p>
-    <p v-else-if="!pins?.length" class="px-4 sm:px-6 pt-6 text-muted">По этим фильтрам задач пока нет.</p>
+    <p v-if="pending" class="px-3 sm:px-6 pt-5 sm:pt-6 text-sm sm:text-base text-muted">Загрузка…</p>
+    <p v-else-if="!pins?.length" class="px-3 sm:px-6 pt-5 sm:pt-6 text-sm sm:text-base text-muted">По этим фильтрам задач пока нет.</p>
 
-    <div class="p-4 sm:p-6">
-      <div class="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-4">
+    <div class="p-3 sm:p-6">
+      <div class="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-3 sm:gap-4">
         <NuxtLink
             v-for="pin in pins"
             :key="pin.id"
             :to="`/tasks/${pin.id}`"
-            class="group block mb-4 break-inside-avoid rounded-xl overflow-hidden border border-default bg-default shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+            class="group block mb-3 sm:mb-4 break-inside-avoid rounded-xl overflow-hidden border border-default bg-default shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
         >
           <div
               class="flex items-center justify-center bg-elevated text-primary/60 transition-colors group-hover:text-primary"
@@ -111,7 +112,7 @@ const { data: pins, pending } = await useFetch<Task[]>('/api/tasks', { query })
           >
             <UIcon name="i-lucide-image" class="size-8"/>
           </div>
-          <p class="p-3 text-sm text-muted">
+          <p class="p-2.5 sm:p-3 text-xs sm:text-sm text-muted">
             {{ pin.description }}
           </p>
         </NuxtLink>
