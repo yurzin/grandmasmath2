@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: grandmasmath-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: grandmasmath
+    ports:
+      - '5432:5432'
+    volumes:
+      - grandmasmath-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  grandmasmath-postgres-data:

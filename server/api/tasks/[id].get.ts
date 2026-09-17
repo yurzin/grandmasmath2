@@ -1,10 +1,47 @@
-import { tasks } from '../../utils/tasks'
+import { asc, eq } from 'drizzle-orm'
+import { buildTaskHeight, buildTaskTitle, type TaskDetail } from '../../utils/tasks'
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event): Promise<TaskDetail> => {
     const id = Number(getRouterParam(event, 'id'))
+    if (!Number.isInteger(id)) {
+        throw createError({ statusCode: 400, statusMessage: 'Некорректный идентификатор' })
+    }
 
-    const item = tasks.find((i) => i.id === id)
-    if (!item) throw createError({ statusCode: 404, statusMessage: 'Не найдено' })
+    const [row] = await db
+        .select({
+            id: schema.tasks.id,
+            body: schema.tasks.body,
+            answer: schema.tasks.answer,
+            difficulty: schema.tasks.difficulty,
+            taskTypeNumber: schema.taskTypes.number,
+            taskTypeName: schema.taskTypes.name,
+            examLevel: schema.taskTypes.exam_level,
+            topicName: schema.topics.name,
+        })
+        .from(schema.tasks)
+        .innerJoin(schema.taskTypes, eq(schema.tasks.task_type_id, schema.taskTypes.id))
+        .leftJoin(schema.topics, eq(schema.tasks.topic_id, schema.topics.id))
+        .where(eq(schema.tasks.id, id))
+        .limit(1)
 
-    return item
+    if (!row) throw createError({ statusCode: 404, statusMessage: 'Не найдено' })
+
+    const solutionRows = await db
+        .select({ body: schema.solutions.body })
+        .from(schema.solutions)
+        .where(eq(schema.solutions.task_id, id))
+        .orderBy(asc(schema.solutions.sort_order))
+
+    return {
+        id: row.id,
+        title: buildTaskTitle(row.taskTypeNumber, row.examLevel, row.topicName),
+        description: row.body,
+        height: buildTaskHeight(row.body),
+        answer: row.answer,
+        difficulty: row.difficulty,
+        topic: row.topicName,
+        taskType: row.taskTypeName,
+        examLevel: row.examLevel,
+        solutions: solutionRows.map(s => s.body),
+    }
 })

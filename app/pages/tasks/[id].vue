@@ -1,14 +1,22 @@
 <script setup lang="ts">
-interface Task {
+interface TaskDetail {
   id: number
   title: string
   description: string
   height: number
+  answer: string
+  difficulty: number
+  topic: string | null
+  taskType: string
+  examLevel: 'base' | 'profile'
+  solutions: string[]
 }
 
 const route = useRoute()
 
-const { data: task } = await useFetch<Task>(() => `/api/tasks/${route.params.id}`)
+const { data: task } = await useFetch<TaskDetail>(() => `/api/tasks/${route.params.id}`)
+
+const showSolution = ref(false)
 
 useSeoMeta({
   title: () => task.value ? task.value.title : 'Задача не найдена'
@@ -34,13 +42,67 @@ useSeoMeta({
       </div>
 
       <div class="p-4 sm:p-6">
-        <span class="text-xs text-muted">Задача №{{ task.id }}</span>
-        <h1 class="mt-1 text-xl sm:text-2xl font-semibold text-highlighted">
-          {{ task.title }}
-        </h1>
-        <p class="mt-3 text-muted">
+        <div class="flex flex-wrap items-center gap-2">
+          <UBadge :color="task.examLevel === 'profile' ? 'primary' : 'neutral'" variant="subtle">
+            {{ task.examLevel === 'profile' ? 'Профильный уровень' : 'Базовый уровень' }}
+          </UBadge>
+          <UBadge v-if="task.topic" color="neutral" variant="outline">
+            {{ task.topic }}
+          </UBadge>
+          <UBadge color="neutral" variant="outline">
+            Сложность: {{ task.difficulty }}/5
+          </UBadge>
+        </div>
+
+        <span class="block mt-3 text-xs text-muted">Задача №{{ task.id }} · {{ task.taskType }}</span>
+        <p class="mt-3 text-muted whitespace-pre-line">
           {{ task.description }}
         </p>
+
+        <div class="mt-6">
+          <UButton
+              v-if="!showSolution"
+              icon="i-lucide-eye"
+              color="neutral"
+              variant="outline"
+              @click="showSolution = true"
+          >
+            Показать ответ и решение
+          </UButton>
+
+          <div v-else class="space-y-4">
+            <div class="rounded-lg bg-muted p-4">
+              <span class="text-xs text-muted">Ответ</span>
+              <p class="mt-1 font-semibold text-highlighted">{{ task.answer }}</p>
+            </div>
+
+            <div v-if="task.solutions.length">
+              <span class="text-xs text-muted">Решение</span>
+              <ol class="mt-2 space-y-3">
+                <li
+                    v-for="(step, index) in task.solutions"
+                    :key="index"
+                    class="flex gap-3"
+                >
+                  <span class="flex-none flex items-center justify-center size-6 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                    {{ index + 1 }}
+                  </span>
+                  <p class="text-muted whitespace-pre-line">{{ step }}</p>
+                </li>
+              </ol>
+            </div>
+
+            <UButton
+                icon="i-lucide-eye-off"
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                @click="showSolution = false"
+            >
+              Скрыть
+            </UButton>
+          </div>
+        </div>
       </div>
     </div>
 
