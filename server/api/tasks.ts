@@ -7,12 +7,12 @@ export default defineEventHandler(async (): Promise<TaskCard[]> => {
             id: schema.tasks.id,
             body: schema.tasks.body,
             taskTypeNumber: schema.taskTypes.number,
-            examLevel: schema.taskTypes.exam_level,
+            examLevel: schema.taskTypes.examLevel,
             topicName: schema.topics.name,
         })
         .from(schema.tasks)
-        .innerJoin(schema.taskTypes, eq(schema.tasks.task_type_id, schema.taskTypes.id))
-        .leftJoin(schema.topics, eq(schema.tasks.topic_id, schema.topics.id))
+        .innerJoin(schema.taskTypes, eq(schema.tasks.taskTypeId, schema.taskTypes.id))
+        .leftJoin(schema.topics, eq(schema.tasks.topicId, schema.topics.id))
         .orderBy(schema.tasks.id)
 
     return rows.map((row) => ({

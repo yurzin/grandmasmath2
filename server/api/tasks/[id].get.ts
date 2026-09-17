@@ -15,12 +15,12 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
             difficulty: schema.tasks.difficulty,
             taskTypeNumber: schema.taskTypes.number,
             taskTypeName: schema.taskTypes.name,
-            examLevel: schema.taskTypes.exam_level,
+            examLevel: schema.taskTypes.examLevel,
             topicName: schema.topics.name,
         })
         .from(schema.tasks)
-        .innerJoin(schema.taskTypes, eq(schema.tasks.task_type_id, schema.taskTypes.id))
-        .leftJoin(schema.topics, eq(schema.tasks.topic_id, schema.topics.id))
+        .innerJoin(schema.taskTypes, eq(schema.tasks.taskTypeId, schema.taskTypes.id))
+        .leftJoin(schema.topics, eq(schema.tasks.topicId, schema.topics.id))
         .where(eq(schema.tasks.id, id))
         .limit(1)
 
@@ -29,8 +29,8 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
     const solutionRows = await db
         .select({ body: schema.solutions.body })
         .from(schema.solutions)
-        .where(eq(schema.solutions.task_id, id))
-        .orderBy(asc(schema.solutions.sort_order))
+        .where(eq(schema.solutions.taskId, id))
+        .orderBy(asc(schema.solutions.sortOrder))
 
     return {
         id: row.id,
