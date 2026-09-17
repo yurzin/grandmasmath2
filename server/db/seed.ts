@@ -1,11 +1,10 @@
-// @ts-nocheck
-process.loadEnvFile('.env')
-
 import postgres from 'postgres'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { topics, taskTypes, tasks, solutions, tags, taskTags } from './schema'
 
-const sql = postgres(process.env.DATABASE_URL)
+process.loadEnvFile('.env')
+
+const sql = postgres(process.env.DATABASE_URL!)
 const db = drizzle(sql, { casing: 'snake_case' })
 
 async function main() {
@@ -36,7 +35,7 @@ async function main() {
         { number: 5, examLevel: 'base', name: 'Простейшие текстовые задачи' },
     ]).returning()
     const type = (number: number, level: 'base' | 'profile') =>
-        taskTypeRows.find(t => t.number === number && t.examLevel === level).id
+        taskTypeRows.find(t => t.number === number && t.examLevel === level)!.id
 
     console.log('Seeding tags...')
     const tagRows = await db.insert(tags).values([
@@ -207,14 +206,15 @@ async function main() {
             answer: def.answer,
             source: def.source,
         }).returning()
+        const taskId = task!.id
 
         await db.insert(solutions).values(
-            def.steps.map((body, i) => ({ taskId: task.id, body, sortOrder: i + 1 })),
+            def.steps.map((body, i) => ({ taskId, body, sortOrder: i + 1 })),
         )
 
         if (def.tagNames.length) {
             await db.insert(taskTags).values(
-                def.tagNames.map(name => ({ taskId: task.id, tagId: tag[name] })),
+                def.tagNames.map(name => ({ taskId, tagId: tag[name]! })),
             )
         }
     }
