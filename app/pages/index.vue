@@ -44,44 +44,54 @@ const { data: pins, pending } = await useFetch<Task[]>('/api/tasks', { query })
 
 <template>
   <div>
-    <div class="flex flex-col sm:flex-row sm:flex-wrap gap-3 px-4 sm:px-6 pt-4 sm:pt-6">
-      <USelect
-          v-model="filters.taskType"
-          :items="taskTypeItems"
-          placeholder="Все номера ЕГЭ"
-          color="neutral"
-          variant="outline"
-          class="w-full sm:w-72"
-      />
+    <div class="px-4 sm:px-6 pt-4 sm:pt-6">
+      <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 rounded-xl border border-default bg-default p-4 shadow-sm">
+        <div class="flex items-center gap-2 text-sm font-medium text-highlighted">
+          <UIcon name="i-lucide-sliders-horizontal" class="size-4 text-primary"/>
+          Фильтры
+        </div>
 
-      <USelect
-          v-model="filters.topic"
-          :items="topicItems"
-          placeholder="Все темы"
-          color="neutral"
-          variant="outline"
-          class="w-full sm:w-56"
-      />
+        <USelect
+            v-model="filters.taskType"
+            :items="taskTypeItems"
+            icon="i-lucide-hash"
+            placeholder="Все номера ЕГЭ"
+            color="neutral"
+            variant="outline"
+            class="w-full sm:w-72"
+        />
 
-      <USelect
-          v-model="filters.difficulty"
-          :items="difficultyItems"
-          placeholder="Любая сложность"
-          color="neutral"
-          variant="outline"
-          class="w-full sm:w-48"
-      />
+        <USelect
+            v-model="filters.topic"
+            :items="topicItems"
+            icon="i-lucide-shapes"
+            placeholder="Все темы"
+            color="neutral"
+            variant="outline"
+            class="w-full sm:w-56"
+        />
 
-      <UButton
-          v-if="hasFilters"
-          icon="i-lucide-x"
-          color="neutral"
-          variant="ghost"
-          class="cursor-pointer"
-          @click="resetFilters"
-      >
-        Сбросить фильтры
-      </UButton>
+        <USelect
+            v-model="filters.difficulty"
+            :items="difficultyItems"
+            icon="i-lucide-gauge"
+            placeholder="Любая сложность"
+            color="neutral"
+            variant="outline"
+            class="w-full sm:w-48"
+        />
+
+        <UButton
+            v-if="hasFilters"
+            icon="i-lucide-x"
+            color="neutral"
+            variant="ghost"
+            class="cursor-pointer sm:ml-auto"
+            @click="resetFilters"
+        >
+          Сбросить фильтры
+        </UButton>
+      </div>
     </div>
 
     <p v-if="pending" class="px-4 sm:px-6 pt-6 text-muted">Загрузка…</p>
@@ -93,10 +103,10 @@ const { data: pins, pending } = await useFetch<Task[]>('/api/tasks', { query })
             v-for="pin in pins"
             :key="pin.id"
             :to="`/tasks/${pin.id}`"
-            class="block mb-4 break-inside-avoid rounded-lg overflow-hidden border border-default bg-default"
+            class="group block mb-4 break-inside-avoid rounded-xl overflow-hidden border border-default bg-default shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
         >
           <div
-              class="flex items-center justify-center bg-muted text-dimmed"
+              class="flex items-center justify-center bg-elevated text-primary/60 transition-colors group-hover:text-primary"
               :style="{ height: pin.height + 'px' }"
           >
             <UIcon name="i-lucide-image" class="size-8"/>
