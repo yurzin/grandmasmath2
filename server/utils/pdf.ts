@@ -11,14 +11,19 @@ export async function preparePdfOr404(collectionId: number) {
 export function pdfTemplateSource(): TemplateSource {
     const storage = useStorage('assets:pdf-template')
     const key = (path: string) => path.replaceAll('/', ':')
+    const raw = async (path: string) => {
+        const value = await storage.getItemRaw(key(path))
+        if (value == null) return null
+        if (typeof value === 'string') return new TextEncoder().encode(value)
+        return value instanceof Uint8Array ? value : new Uint8Array(value as ArrayBuffer)
+    }
     return {
+        // Текст читаем как байты и декодируем сами: в собранном приложении getItem для .tex
+        // возвращает не строку, а байты, и String() превращал их в «37,32,…».
         async text(path) {
-            const value = await storage.getItem<string>(key(path))
-            return value == null ? null : String(value)
+            const bytes = await raw(path)
+            return bytes == null ? null : new TextDecoder().decode(bytes)
         },
-        async raw(path) {
-            const value = await storage.getItemRaw(key(path))
-            return value == null ? null : new Uint8Array(value as ArrayBuffer)
-        },
+        raw,
     }
 }

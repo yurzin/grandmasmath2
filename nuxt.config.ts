@@ -5,8 +5,17 @@ export default defineNuxtConfig({
     hub: {
         db: {
             dialect: 'postgresql',
-            casing: 'snake_case'
+            casing: 'snake_case',
+            driver: 'postgres-js',
+            // При сборке базы нет (Docker) — миграции применяет контейнер при старте (docker/migrate.mjs).
+            // В dev NuxtHub по-прежнему применяет их сам.
+            applyMigrationsDuringBuild: false,
         }
+    },
+    // В сборке адрес базы пустой: тогда NuxtHub читает DATABASE_URL при запуске сервера, а не вшивает его
+    // в код (иначе пароль попал бы в образ Docker). В dev адрес, как обычно, берётся из .env.
+    $production: {
+        hub: { db: { dialect: 'postgresql', connection: { url: '' } } },
     },
     app: {
         head: {

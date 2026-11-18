@@ -1,3 +1,7 @@
+# База для разработки:          docker compose up -d
+# База + сайт в контейнере:     docker compose --profile app up -d --build
+# Настройки сайта берутся из .env (те же переменные, что для npm run dev); адрес базы для контейнера
+# задаётся здесь и указывает на сервис postgres.
 services:
   postgres:
     image: postgres:16-alpine
@@ -5,12 +9,43 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: grandmasmath
     ports:
       - '5432:5432'
     volumes:
       - grandmasmath-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d grandmasmath']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    profiles: ['app']
+    build: .
+    image: grandmasmath-app
+    container_name: grandmasmath-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD:-postgres}@postgres:5432/grandmasmath
+      NUXT_SESSION_PASSWORD: ${NUXT_SESSION_PASSWORD:?Задайте NUXT_SESSION_PASSWORD (не короче 32 символов) в .env}
+      NUXT_SITE_URL: ${NUXT_SITE_URL:-http://localhost:8080}
+      NUXT_MAIL_SMTP_URL: ${NUXT_MAIL_SMTP_URL:-}
+      NUXT_MAIL_FROM: ${NUXT_MAIL_FROM:-Сборники ЕГЭ <no-reply@localhost>}
+      NUXT_YOOKASSA_SHOP_ID: ${NUXT_YOOKASSA_SHOP_ID:-}
+      NUXT_YOOKASSA_SECRET_KEY: ${NUXT_YOOKASSA_SECRET_KEY:-}
+      NUXT_YOOKASSA_RECEIPT: ${NUXT_YOOKASSA_RECEIPT:-}
+      NUXT_YOOKASSA_VAT_CODE: ${NUXT_YOOKASSA_VAT_CODE:-1}
+      NUXT_YOOKASSA_PAYMENT_SUBJECT: ${NUXT_YOOKASSA_PAYMENT_SUBJECT:-commodity}
+    ports:
+      - '${APP_PORT:-8080}:3000'
+    volumes:
+      - grandmasmath-app-data:/app/.data
 
 volumes:
   grandmasmath-postgres-data:
+  grandmasmath-app-data:
