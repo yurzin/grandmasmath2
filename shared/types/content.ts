@@ -45,7 +45,21 @@ export interface CollectionCard {
     taskCount: number
 }
 
+export interface PurchaseItem {
+    id: number
+    status: 'pending' | 'succeeded' | 'canceled'
+    amount: number
+    createdAt: string
+    paidAt: string | null
+    collection: { slug: string, title: string }
+    /** Ссылка, чтобы вернуться к незавершённой оплате. */
+    confirmationUrl: string | null
+}
+
 export interface CollectionDetail extends Omit<CollectionCard, 'taskCount'> {
+    id: number
+    /** Текущий пользователь уже купил сборник (id оплаченной покупки). */
+    purchaseId: number | null
     tasks: {
         id: number
         position: number

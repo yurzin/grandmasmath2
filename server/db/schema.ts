@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, text, varchar, serial, integer, smallint, boolean, timestamp, unique, primaryKey } from 'drizzle-orm/pg-core'
+import { pgTable, pgEnum, text, varchar, serial, integer, smallint, boolean, timestamp, unique, index, primaryKey } from 'drizzle-orm/pg-core'
 
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin'])
 
@@ -89,4 +89,43 @@ export const taskTags = pgTable('task_tags', {
     tagId: integer().notNull().references(() => tags.id),
 }, (t) => [
     primaryKey({ columns: [t.taskId, t.tagId] }),
+])
+
+// ---------- Вход по email (этап 4) ----------
+
+/** Одноразовый код/ссылка для входа. Хранятся только хеши. */
+export const loginTokens = pgTable('login_tokens', {
+    id: serial().primaryKey(),
+    email: text().notNull(),
+    codeHash: text().notNull(),
+    linkHash: text().notNull().unique(),
+    attempts: smallint().notNull().default(0),
+    expiresAt: timestamp().notNull(),
+    usedAt: timestamp(),
+    createdAt: timestamp().notNull().defaultNow(),
+}, t => [
+    index('idx_login_tokens_email').on(t.email),
+])
+
+// ---------- Покупки (этап 4) ----------
+
+export const purchaseStatusEnum = pgEnum('purchase_status', ['pending', 'succeeded', 'canceled'])
+
+export const purchases = pgTable('purchases', {
+    id: serial().primaryKey(),
+    userId: integer().notNull().references(() => users.id),
+    collectionId: integer().notNull().references(() => collections.id),
+    status: purchaseStatusEnum().notNull().default('pending'),
+    /** Сумма в рублях на момент покупки. */
+    amount: integer().notNull(),
+    /** Платёжный провайдер ('yookassa' | 'mock') и id платежа у него. */
+    provider: varchar({ length: 20 }).notNull(),
+    paymentId: varchar({ length: 100 }).unique(),
+    confirmationUrl: text(),
+    collectionVersion: integer().notNull(),
+    downloadCount: integer().notNull().default(0),
+    createdAt: timestamp().notNull().defaultNow(),
+    paidAt: timestamp(),
+}, t => [
+    index('idx_purchases_user').on(t.userId),
 ])

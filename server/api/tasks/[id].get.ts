@@ -28,20 +28,23 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
 
     if (!row) throw createError({ statusCode: 404, message: 'Не найдено' })
 
-    const [collectionRow] = await db
+    // Задача может входить в несколько сборников; для ссылки «назад» берём опубликованный.
+    const memberships = await db
         .select({
+            collectionId: schema.collections.id,
             slug: schema.collections.slug,
             title: schema.collections.title,
+            status: schema.collections.status,
             position: schema.collectionTasks.position,
             isFree: schema.collectionTasks.isFree,
         })
         .from(schema.collectionTasks)
         .innerJoin(schema.collections, eq(schema.collectionTasks.collectionId, schema.collections.id))
         .where(eq(schema.collectionTasks.taskId, id))
-        .limit(1)
+    const collectionRow = memberships.find(m => m.status === 'published') ?? memberships[0]
 
     // Платные ответ и решения не покидают сервер.
-    const locked = !(await canViewSolution(event, collectionRow))
+    const locked = !(await canViewSolution(event, memberships))
     const solutionRows = locked
         ? []
         : await db

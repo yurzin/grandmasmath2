@@ -110,12 +110,18 @@ export async function buildPdf(prepared: PreparedPdf): Promise<{ cached: boolean
 
 /** Удаляет из кэша прежние сборки этого сборника (<slug>-<другой хеш>.pdf). */
 async function removeStaleVersions(prepared: PreparedPdf) {
-    const current = basename(prepared.path)
-    // slug — только [a-z0-9-], спецсимволов регулярных выражений в нём нет.
+    await removeCachedPdfs(prepared.slug, basename(prepared.path))
+}
+
+/** Удаляет кэшированные PDF сборника (кроме keep) — например, когда сборник удалён. */
+export async function removeCachedPdfs(slug: string, keep?: string) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return
     // Точный шаблон: иначе для «economic» под удаление попали бы файлы «economic-tasks-…».
-    const ownFile = new RegExp(`^${prepared.slug}-[0-9a-f]{16}(-stamped)?\\.pdf$`)
-    const stale = (await readdir(PDF_CACHE_DIR)).filter(name => name !== current && ownFile.test(name))
-    await Promise.all(stale.map(name => unlink(join(PDF_CACHE_DIR, name)).catch(() => {})))
+    const ownFile = new RegExp(`^${slug}-[0-9a-f]{16}(-stamped)?\\.pdf$`)
+    const files = await readdir(PDF_CACHE_DIR).catch(() => [] as string[])
+    await Promise.all(files
+        .filter(name => name !== keep && ownFile.test(name))
+        .map(name => unlink(join(PDF_CACHE_DIR, name)).catch(() => {})))
 }
 
 export function readCachedPdf(prepared: PreparedPdf) {

@@ -7,19 +7,16 @@ const bodySchema = z.object({
     password: z.string().min(1).max(200),
 })
 
-// Не больше MAX_ATTEMPTS неудачных попыток с одного IP за WINDOW_MS.
-const MAX_ATTEMPTS = 10
-const WINDOW_MS = 15 * 60 * 1000
-const failures = new Map<string, { count: number, resetAt: number }>()
+// Не больше 10 неудачных попыток с одного IP за 15 минут.
+const failures = createRateLimiter({ max: 10, windowMs: 15 * 60 * 1000 })
 
 // Хеш-пустышка: проверяем пароль и для несуществующего email, чтобы время ответа не выдавало, есть ли пользователь.
 const dummyHash = hashPassword('dummy-password-for-timing')
 
+/** Вход администратора по паролю. Покупатели входят по коду из письма (/api/auth/email/*). */
 export default defineEventHandler(async (event) => {
-    const ip = getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'
-    const now = Date.now()
-    const entry = failures.get(ip)
-    if (entry && entry.resetAt > now && entry.count >= MAX_ATTEMPTS) {
+    const ip = clientIp(event)
+    if (failures.isLimited(ip)) {
         throw createError({ statusCode: 429, message: 'Слишком много попыток. Попробуйте позже.' })
     }
 
@@ -29,16 +26,11 @@ export default defineEventHandler(async (event) => {
     const ok = await verifyPassword(user?.password ?? await dummyHash, password)
 
     if (!user?.password || !ok) {
-        const current = entry && entry.resetAt > now ? entry : { count: 0, resetAt: now + WINDOW_MS }
-        current.count++
-        failures.set(ip, current)
-        if (failures.size > 10_000) {
-            for (const [key, value] of failures) if (value.resetAt <= now) failures.delete(key)
-        }
+        failures.hit(ip)
         throw createError({ statusCode: 401, message: 'Неверный email или пароль' })
     }
 
-    failures.delete(ip)
+    failures.reset(ip)
     await setUserSession(event, {
         user: { id: user.id, name: user.name, email: user.email, role: user.role },
         loggedInAt: new Date().toISOString(),

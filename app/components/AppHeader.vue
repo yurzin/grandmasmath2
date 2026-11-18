@@ -3,6 +3,7 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 
 const route = useRoute()
+const { loggedIn } = useUserSession()
 
 const links = computed<NavigationMenuItem[]>(() => [{
   label: 'Главная',
@@ -35,6 +36,21 @@ const links = computed<NavigationMenuItem[]>(() => [{
     </template>
 
     <UNavigationMenu :items="links"/>
+
+    <template #right>
+      <UButton
+          v-if="loggedIn"
+          to="/account"
+          icon="i-lucide-user"
+          color="neutral"
+          variant="ghost"
+      >
+        <span class="hidden sm:inline">Мои покупки</span>
+      </UButton>
+      <UButton v-else to="/login" icon="i-lucide-log-in" color="neutral" variant="ghost">
+        <span class="hidden sm:inline">Войти</span>
+      </UButton>
+    </template>
 
     <template #body>
       <UNavigationMenu :items="links" orientation="vertical"/>

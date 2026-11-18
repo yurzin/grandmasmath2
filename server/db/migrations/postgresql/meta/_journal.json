@@ -29,6 +29,13 @@
       "when": 1794974651838,
       "tag": "0003_flawless_jocasta",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794978316763,
+      "tag": "0004_striped_slayback",
+      "breakpoints": true
     }
   ]
 }

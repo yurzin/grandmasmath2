@@ -30,6 +30,18 @@ export default defineEventHandler(async (event): Promise<CollectionDetail> => {
         .where(eq(schema.collectionTasks.collectionId, collection.id))
         .orderBy(asc(schema.collectionTasks.position))
 
-    const { id: _id, ...rest } = collection
-    return { ...rest, tasks }
+    // Куплен ли сборник текущим пользователем.
+    const { user } = await getUserSession(event)
+    const [paid] = user
+        ? await db.select({ id: schema.purchases.id }).from(schema.purchases)
+            .where(and(
+                eq(schema.purchases.userId, user.id),
+                eq(schema.purchases.collectionId, collection.id),
+                eq(schema.purchases.status, 'succeeded'),
+            ))
+            .orderBy(asc(schema.purchases.id))
+            .limit(1)
+        : []
+
+    return { ...collection, tasks, purchaseId: paid?.id ?? null }
 })
