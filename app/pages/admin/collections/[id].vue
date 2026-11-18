@@ -122,6 +122,35 @@ async function remove() {
   }
 }
 
+// ---------- PDF сборника ----------
+const { data: pdfStatus, refresh: refreshPdfStatus } = await useFetch<AdminPdfStatus>(
+  () => `/api/admin/collections/${route.params.id}/pdf`,
+  { immediate: !isNew.value, server: false },
+)
+const pdfBuilding = ref(false)
+const pdfError = ref<{ message: string, log: string } | null>(null)
+
+async function buildPdf() {
+  pdfBuilding.value = true
+  pdfError.value = null
+  try {
+    pdfStatus.value = await $fetch<AdminPdfStatus>(`/api/admin/collections/${collectionId.value}/pdf`, { method: 'POST' })
+    toast.add({ title: 'PDF собран', color: 'success', icon: 'i-lucide-check' })
+  } catch (e) {
+    const log = (e as { data?: { data?: { log?: string } } })?.data?.data?.log ?? ''
+    pdfError.value = { message: errorMessage(e, 'Не удалось собрать PDF'), log }
+  } finally {
+    pdfBuilding.value = false
+  }
+}
+
+// После сохранения содержимое могло измениться — PDF может устареть.
+watch(saved, () => {
+  if (!isNew.value) refreshPdfStatus()
+})
+
+const dateTimeFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'short', timeStyle: 'short' })
+
 defineShortcuts({ meta_s: () => save() })
 
 onBeforeRouteLeave(() => {
@@ -214,6 +243,76 @@ onBeforeRouteLeave(() => {
               class="mt-2 w-full"
           />
         </div>
+
+        <section v-if="!isNew" class="rounded-lg border border-default p-4 space-y-3">
+          <div class="flex flex-wrap items-center gap-2">
+            <UIcon name="i-lucide-file-text" class="size-5 text-primary"/>
+            <h2 class="font-medium text-highlighted">PDF сборника</h2>
+            <UBadge v-if="pdfStatus?.upToDate" color="success" variant="subtle" size="sm">актуален</UBadge>
+            <UBadge v-else-if="pdfStatus" color="warning" variant="subtle" size="sm">не собран или устарел</UBadge>
+            <span v-if="pdfStatus?.upToDate && pdfStatus.builtAt" class="text-xs text-dimmed">
+              собран {{ dateTimeFormat.format(new Date(pdfStatus.builtAt)) }} ·
+              {{ ((pdfStatus.size ?? 0) / 1024).toFixed(0) }} КБ
+            </span>
+          </div>
+
+          <p class="text-sm text-muted">
+            Собирается из сохранённых задач сборника по шаблону XeLaTeX. Сборка занимает до полуминуты;
+            пока содержимое не меняется, готовый файл берётся из кэша.
+          </p>
+
+          <div class="flex flex-wrap gap-2">
+            <UButton
+                icon="i-lucide-hammer"
+                :loading="pdfBuilding"
+                :disabled="dirty || pdfStatus?.upToDate"
+                @click="buildPdf"
+            >
+              {{ pdfBuilding ? 'Собираю…' : 'Собрать PDF' }}
+            </UButton>
+            <UButton
+                :disabled="!pdfStatus?.upToDate"
+                :to="`/api/admin/collections/${collectionId}/pdf/download`"
+                external
+                icon="i-lucide-download"
+                color="neutral"
+                variant="outline"
+            >
+              Скачать
+            </UButton>
+            <UButton
+                :disabled="!pdfStatus?.upToDate"
+                :to="`/api/admin/collections/${collectionId}/pdf/download?stamp=1`"
+                external
+                icon="i-lucide-stamp"
+                color="neutral"
+                variant="ghost"
+            >
+              Образец с водяным знаком
+            </UButton>
+          </div>
+          <p v-if="dirty" class="text-xs text-warning">Сначала сохраните изменения — PDF собирается из сохранённых данных.</p>
+
+          <UAlert
+              v-if="pdfStatus?.warnings.length"
+              color="warning"
+              variant="subtle"
+              icon="i-lucide-triangle-alert"
+              title="При переводе в LaTeX кое-что пропущено"
+          >
+            <template #description>
+              <ul class="list-disc pl-4 text-xs">
+                <li v-for="(w, i) in pdfStatus.warnings.slice(0, 10)" :key="i">{{ w }}</li>
+              </ul>
+            </template>
+          </UAlert>
+
+          <UAlert v-if="pdfError" color="error" variant="subtle" icon="i-lucide-circle-alert" :title="pdfError.message">
+            <template v-if="pdfError.log" #description>
+              <pre class="mt-1 max-h-64 overflow-auto whitespace-pre-wrap text-xs">{{ pdfError.log }}</pre>
+            </template>
+          </UAlert>
+        </section>
 
         <div v-if="!isNew" class="flex border-t border-default pt-4">
           <UButton class="ml-auto" icon="i-lucide-trash-2" color="error" variant="soft" @click="remove">

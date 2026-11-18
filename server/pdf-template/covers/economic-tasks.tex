@@ -1,0 +1,56 @@
+% Титульный лист сборника «Решение экономических задач ЕГЭ» (иллюстрация: долг, проценты, монеты).
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay]
+  % фон
+  \shade[top color=titleblue!95!black, bottom color=accent!85!black]
+    (current page.south west) rectangle (current page.north east);
+  % тонкая сетка
+  \begin{scope}[opacity=0.07]
+    \foreach \x in {0,0.8,...,21.6} \draw[white,line width=0.3pt]
+      ($(current page.south west)+(\x,0)$) -- ++(0,29.7);
+    \foreach \y in {0,0.8,...,30} \draw[white,line width=0.3pt]
+      ($(current page.south west)+(0,\y)$) -- ++(21,0);
+  \end{scope}
+  % верхняя плашка
+  \node[anchor=north,text=white!80,font=\small\addfontfeatures{LetterSpace=12}]
+    at ($(current page.north)+(0,-2.2)$) {ЕДИНЫЙ ГОСУДАРСТВЕННЫЙ ЭКЗАМЕН · МАТЕМАТИКА · ПРОФИЛЬ};
+  \draw[white!60,line width=0.6pt] ($(current page.north)+(-4,-2.9)$) -- ++(8,0);
+
+  % заголовок
+  \node[anchor=north,text=white,align=center,font=\fontsize{34}{40}\selectfont\bfseries]
+    at ($(current page.north)+(0,-4.0)$) {Решение\\экономических задач\\ЕГЭ};
+  \node[anchor=north,text=white!85,align=center,font=\large]
+    at ($(current page.north)+(0,-9.3)$) {Задача № 16 · \TaskCountText\ с подробными решениями};
+
+  % ===== иллюстрация =====
+  \begin{scope}[shift={($(current page.center)+(-5.6,-6.2)$)}]
+    \fill[white,opacity=0.10,rounded corners=10pt] (-0.8,-0.9) rectangle (12.0,8.4);
+    \draw[white,opacity=0.35,rounded corners=10pt,line width=0.8pt] (-0.8,-0.9) rectangle (12.0,8.4);
+    \draw[white,line width=1.2pt,-latex] (0,0) -- (11.2,0);
+    \draw[white,line width=1.2pt,-latex] (0,0) -- (0,7.8);
+    \foreach \y in {1.5,3,4.5,6} \draw[white,opacity=0.25,dashed] (0,\y) -- (10.8,\y);
+    \foreach \x/\h/\c in {0.7/1.6/0.55, 2.0/2.3/0.62, 3.3/2.9/0.69, 4.6/3.7/0.76, 5.9/4.4/0.83, 7.2/5.3/0.90, 8.5/6.2/0.97}{
+      \fill[white,opacity=\c,rounded corners=1.5pt] (\x,0) rectangle ++(0.85,\h);
+    }
+    \draw[yellow!80!orange,line width=2.4pt,-{Latex[length=4mm]},rounded corners=2pt]
+      (0.4,1.0) -- (1.6,1.7) -- (2.9,2.2) -- (4.2,3.2) -- (5.5,3.6) -- (6.8,4.9) -- (8.1,5.6) -- (10.4,7.4);
+    \foreach \p in {(1.6,1.7),(2.9,2.2),(4.2,3.2),(5.5,3.6),(6.8,4.9),(8.1,5.6)}
+      \fill[yellow!80!orange] \p circle (3.2pt);
+    \foreach \i in {0,...,5}{
+      \fill[yellow!70!orange!90!black] (10.6,0.05+0.22*\i) ellipse (0.62 and 0.17);
+      \fill[yellow!85!orange] (10.6,0.17+0.22*\i) ellipse (0.62 and 0.17);
+    }
+    \node[circle,fill=white,text=titleblue,minimum size=1.9cm,font=\fontsize{30}{30}\selectfont\bfseries]
+      at (1.6,6.2) {\%};
+    \node[text=white,font=\large,anchor=west] at (3.2,7.35) {$S_{n} = S_{n-1}\cdot\left(1+\dfrac{r}{100}\right) - x$};
+  \end{scope}
+
+  % подвал
+  \node[anchor=south,text=white!85,align=center,font=\normalsize]
+    at ($(current page.south)+(0,3.0)$) {Кредиты · вклады · дифференцированные и аннуитетные платежи};
+  \draw[white!60,line width=0.6pt] ($(current page.south)+(-4,2.6)$) -- ++(8,0);
+  \node[anchor=south,text=white!70,font=\small\addfontfeatures{LetterSpace=10}]
+    at ($(current page.south)+(0,1.7)$) {\CollectionYear};
+\end{tikzpicture}
+\end{titlepage}

@@ -59,6 +59,15 @@ export interface AdminTaskTypeInput {
     name: string
 }
 
+export interface AdminPdfStatus {
+    /** Есть PDF, собранный из текущего содержимого. */
+    upToDate: boolean
+    builtAt: string | null
+    size: number | null
+    /** Что конвертер Markdown → LaTeX пропустил (HTML, картинки…). */
+    warnings: string[]
+}
+
 export interface AdminCollectionListItem {
     id: number
     slug: string

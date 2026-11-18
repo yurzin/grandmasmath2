@@ -1,0 +1,27 @@
+% Титульный лист по умолчанию: тот же фон и сетка, название сборника без иллюстрации.
+% Для отдельного сборника можно положить covers/<slug>.tex.
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay]
+  \shade[top color=titleblue!95!black, bottom color=accent!85!black]
+    (current page.south west) rectangle (current page.north east);
+  \begin{scope}[opacity=0.07]
+    \foreach \x in {0,0.8,...,21.6} \draw[white,line width=0.3pt]
+      ($(current page.south west)+(\x,0)$) -- ++(0,29.7);
+    \foreach \y in {0,0.8,...,30} \draw[white,line width=0.3pt]
+      ($(current page.south west)+(0,\y)$) -- ++(21,0);
+  \end{scope}
+  \node[anchor=north,text=white!80,font=\small\addfontfeatures{LetterSpace=12}]
+    at ($(current page.north)+(0,-2.2)$) {ЕДИНЫЙ ГОСУДАРСТВЕННЫЙ ЭКЗАМЕН · МАТЕМАТИКА};
+  \draw[white!60,line width=0.6pt] ($(current page.north)+(-4,-2.9)$) -- ++(8,0);
+
+  \node[anchor=center,text=white,align=center,text width=16cm,font=\fontsize{30}{38}\selectfont\bfseries]
+    at ($(current page.center)+(0,3)$) {\CollectionTitle};
+  \node[anchor=north,text=white!85,align=center,font=\large]
+    at ($(current page.center)+(0,0.2)$) {\TaskCountText\ с подробными решениями};
+
+  \draw[white!60,line width=0.6pt] ($(current page.south)+(-4,2.6)$) -- ++(8,0);
+  \node[anchor=south,text=white!70,font=\small\addfontfeatures{LetterSpace=10}]
+    at ($(current page.south)+(0,1.7)$) {\CollectionYear};
+\end{tikzpicture}
+\end{titlepage}
