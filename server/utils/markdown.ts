@@ -1,4 +1,5 @@
 import MarkdownIt from 'markdown-it'
+import { TIKZ_FENCE, tikzFigurePath } from '../lib/tikz'
 import { katex } from '@mdit/plugin-katex'
 
 // Контент пишет только автор/админ, поэтому HTML внутри Markdown разрешён.
@@ -8,6 +9,14 @@ const md = new MarkdownIt({ html: true, linkify: false, typographer: false })
         strict: 'ignore',
         throwOnError: false,
     })
+
+// Блок ```tikz``` — рисунок: показываем SVG, отрисованный при импорте (см. server/lib/tikz.ts).
+const defaultFence = md.renderer.rules.fence!
+md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+    const token = tokens[idx]!
+    if (token.info.trim() !== TIKZ_FENCE) return defaultFence(tokens, idx, options, env, self)
+    return `<figure class="tikz-figure"><img src="${tikzFigurePath(token.content)}" alt="Рисунок" loading="lazy"></figure>\n`
+}
 
 const CACHE_LIMIT = 500
 const cache = new Map<string, string>()

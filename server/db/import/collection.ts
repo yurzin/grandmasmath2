@@ -1,12 +1,14 @@
 /**
- * Импорт сборника «Решение экономических задач ЕГЭ» из LaTeX-исходника.
+ * Импорт сборника из LaTeX-исходника (all_tasks.tex в разметке 	ask / uslovie / eshenie / otvet).
  *
- *   npm run db:import-econ -- [путь к all_tasks.tex] [--dry-run] [--overwrite]
+ *   npm run db:import -- <сборник> [путь к all_tasks.tex] [--dry-run] [--overwrite]
+ *   сборники: econ (№16, экономические задачи), params (№18, задачи с параметром)
  *
  * Если сборник уже есть в БД, нужен --overwrite: задачи сопоставляются по позиции
  * в сборнике и обновляются на месте (id не меняются), решения перезаписываются —
  * правки, сделанные в админке, при этом теряются.
  * --dry-run ничего не пишет в БД, а сохраняет Markdown в .data/import-preview/.
+ * Рисунки TikZ отрисовываются в public/figures/*.svg (их нужно закоммитить).
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -15,25 +17,66 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { and, eq } from 'drizzle-orm'
 import { collections, collectionTasks, solutions, taskTypes, tasks, topics } from '../schema'
 import { parseCollection } from './parse-collection'
+import { renderTikzFigures } from './tikz-figures'
 import { suggestAnswerKey } from '../../../shared/utils/answer-key'
+import { EGE_PROFILE_TASKS } from '../../../shared/utils/ege'
 import { renderMarkdown } from '../../utils/markdown'
+import { extractTikz } from '../../lib/tikz'
 
-const DEFAULT_SOURCE = 'D:/work/Math/Economic/scan/build/all_tasks.tex'
-
-const COLLECTION = {
-    slug: 'economic-tasks',
-    title: 'Решение экономических задач ЕГЭ',
-    description: 'Подробные решения 36 экономических задач (№16 профильного ЕГЭ): кредиты с аннуитетными и дифференцированными платежами, вклады, выбор выгодного варианта.',
+interface CollectionSource {
+    source: string
+    collection: { slug: string, title: string, description: string }
+    taskTypeNumber: number
+    topic: { name: string, slug: string } | null
+    difficulty: number
+    /** Сколько первых вариантов открыть бесплатно. */
+    freeCount: number
+    /** Подбирать ключ ответа для «Реши сам» (только когда ответы — числа). */
+    answerKeys: boolean
 }
-const TASK_TYPE = { number: 16, examLevel: 'profile' as const, name: 'Экономическая задача' }
-const TOPIC = { name: 'Финансовая математика', slug: 'financial-math' }
-const DIFFICULTY = 4
-/** Сколько первых вариантов открыть бесплатно (демо). */
-const FREE_COUNT = 3
+
+const SOURCES: Record<string, CollectionSource> = {
+    econ: {
+        source: 'D:/work/Math/Economic/scan/build/all_tasks.tex',
+        collection: {
+            slug: 'economic-tasks',
+            title: 'Решение экономических задач ЕГЭ',
+            description: 'Подробные решения 36 экономических задач (№16 профильного ЕГЭ): кредиты с аннуитетными и дифференцированными платежами, вклады, выбор выгодного варианта.',
+        },
+        taskTypeNumber: 16,
+        topic: { name: 'Финансовая математика', slug: 'financial-math' },
+        difficulty: 4,
+        freeCount: 3,
+        answerKeys: true,
+    },
+    params: {
+        source: 'D:/work/Math/Parameters/18/scan/build/all_tasks.tex',
+        collection: {
+            slug: 'parameter-tasks',
+            title: 'Решение задач с параметром ЕГЭ',
+            description: 'Подробные решения 38 задач с параметром (№18 профильного ЕГЭ): уравнения и системы с модулями, корнями и логарифмами, графический метод, касание окружностей.',
+        },
+        taskTypeNumber: 18,
+        topic: null,
+        difficulty: 5,
+        freeCount: 3,
+        // Ответы — промежутки и множества; автоподбор ключа для них не работает.
+        answerKeys: false,
+    },
+}
 
 const args = process.argv.slice(2)
 const dryRun = args.includes('--dry-run')
-const source = args.find(a => !a.startsWith('--')) ?? DEFAULT_SOURCE
+const [key, sourceArg] = args.filter(a => !a.startsWith('--'))
+const found = key ? SOURCES[key] : undefined
+if (!found) {
+    console.error(`Укажите сборник: ${Object.keys(SOURCES).join(', ')}`)
+    process.exit(1)
+}
+const config: CollectionSource = found
+const { collection: COLLECTION } = config
+const TASK_TYPE = { number: config.taskTypeNumber, examLevel: 'profile' as const, name: EGE_PROFILE_TASKS[config.taskTypeNumber]! }
+const source = sourceArg ?? config.source
 
 const parsed = parseCollection(readFileSync(source, 'utf8')).sort((a, b) => a.position - b.position)
 console.log(`Разобрано задач: ${parsed.length}`)
@@ -49,6 +92,13 @@ for (const t of parsed) {
     }
 }
 for (const w of warnings) console.warn(`  ! ${w}`)
+
+// Рисунки: SVG для сайта (в PDF идёт сам код TikZ).
+const figures = parsed.flatMap(t => [t.body, ...t.solutions].flatMap(extractTikz))
+if (figures.length) {
+    const created = renderTikzFigures(figures)
+    console.log(`Рисунков: ${figures.length}, новых SVG: ${created}`)
+}
 
 if (dryRun) {
     const dir = '.data/import-preview'
@@ -91,8 +141,12 @@ async function main() {
         const [taskType] = await tx.select().from(taskTypes)
             .where(and(eq(taskTypes.number, TASK_TYPE.number), eq(taskTypes.examLevel, TASK_TYPE.examLevel)))
 
-        await tx.insert(topics).values(TOPIC).onConflictDoNothing()
-        const [topic] = await tx.select().from(topics).where(eq(topics.slug, TOPIC.slug))
+        let topicId: number | null = null
+        if (config.topic) {
+            await tx.insert(topics).values(config.topic).onConflictDoNothing()
+            const [topic] = await tx.select().from(topics).where(eq(topics.slug, config.topic.slug))
+            topicId = topic!.id
+        }
 
         const [collection] = await tx.insert(collections)
             .values({ ...COLLECTION, status: 'published' })
@@ -111,12 +165,12 @@ async function main() {
         for (const t of parsed) {
             const values = {
                 taskTypeId: taskType!.id,
-                topicId: topic!.id,
-                difficulty: DIFFICULTY,
+                topicId,
+                difficulty: config.difficulty,
                 title: t.title,
                 body: t.body,
                 answer: t.answer,
-                answerKey: suggestAnswerKey(t.answer),
+                answerKey: config.answerKeys ? suggestAnswerKey(t.answer) : null,
                 source: `${COLLECTION.title}, вариант ${t.position}`,
             }
 
@@ -125,7 +179,7 @@ async function main() {
                 await tx.update(tasks).set(values).where(eq(tasks.id, taskId))
                 await tx.delete(solutions).where(eq(solutions.taskId, taskId))
                 await tx.update(collectionTasks)
-                    .set({ isFree: t.position <= FREE_COUNT })
+                    .set({ isFree: t.position <= config.freeCount })
                     .where(and(eq(collectionTasks.collectionId, collection!.id), eq(collectionTasks.taskId, taskId)))
                 updated++
             } else {
@@ -135,7 +189,7 @@ async function main() {
                     collectionId: collection!.id,
                     taskId,
                     position: t.position,
-                    isFree: t.position <= FREE_COUNT,
+                    isFree: t.position <= config.freeCount,
                 })
                 created++
             }

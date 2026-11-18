@@ -1,0 +1,48 @@
+% Титульный лист сборника «Решение задач с параметром ЕГЭ» (иллюстрация: полуокружности и прямые y = c).
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay]
+  % фон
+  \shade[top color=titleblue!95!black, bottom color=accent!85!black]
+    (current page.south west) rectangle (current page.north east);
+  % тонкая сетка
+  \begin{scope}[opacity=0.07]
+    \foreach \x in {0,0.8,...,21.6} \draw[white,line width=0.3pt]
+      ($(current page.south west)+(\x,0)$) -- ++(0,29.7);
+    \foreach \y in {0,0.8,...,30} \draw[white,line width=0.3pt]
+      ($(current page.south west)+(0,\y)$) -- ++(21,0);
+  \end{scope}
+  % верхняя плашка
+  \node[anchor=north,text=white!80,font=\small\addfontfeatures{LetterSpace=12}]
+    at ($(current page.north)+(0,-2.2)$) {ЕДИНЫЙ ГОСУДАРСТВЕННЫЙ ЭКЗАМЕН · МАТЕМАТИКА · ПРОФИЛЬ};
+  \draw[white!60,line width=0.6pt] ($(current page.north)+(-4,-2.9)$) -- ++(8,0);
+
+  % заголовок
+  \node[anchor=north,text=white,align=center,font=\fontsize{34}{40}\selectfont\bfseries]
+    at ($(current page.north)+(0,-4.0)$) {Решение\\задач с параметром\\ЕГЭ};
+  \node[anchor=north,text=white!85,align=center,font=\large]
+    at ($(current page.north)+(0,-9.3)$) {Задача № 18 · \TaskCountText\ с подробными решениями};
+
+  % ===== иллюстрация: полуокружности и семейство прямых y = c =====
+  \begin{scope}[shift={($(current page.center)+(-5.6,-6.2)$)}]
+    \fill[white,opacity=0.10,rounded corners=10pt] (-0.8,-0.9) rectangle (12.0,8.4);
+    \draw[white,opacity=0.35,rounded corners=10pt,line width=0.8pt] (-0.8,-0.9) rectangle (12.0,8.4);
+    \draw[white,line width=1.2pt,-latex] (0,0) -- (11.2,0);
+    \draw[white,line width=1.2pt,-latex] (0,0) -- (0,7.8);
+    \foreach \y/\o in {1.6/0.55,3.7/0.45,5.8/0.35} \draw[white,opacity=\o,line width=1pt] (0,\y) -- (10.8,\y);
+    \foreach \r/\o in {2.2/0.35,3.4/0.55,4.6/0.9}
+      \draw[yellow!80!orange,opacity=\o,line width=2.2pt] (5.4-\r,0) arc[start angle=180,end angle=0,radius=\r];
+    \fill[yellow!80!orange] (5.4,0) circle (3.2pt);
+    \node[circle,fill=white,text=titleblue,minimum size=1.9cm,font=\fontsize{30}{30}\selectfont\bfseries]
+      at (1.4,6.6) {$a$};
+    \node[text=white,font=\large,anchor=west] at (3.0,7.35) {$y = \sqrt{R^2 - (x - x_0)^2}$};
+  \end{scope}
+
+  % подвал
+  \node[anchor=south,text=white!85,align=center,font=\normalsize]
+    at ($(current page.south)+(0,3.0)$) {Модули · корни · логарифмы · системы · графический метод};
+  \draw[white!60,line width=0.6pt] ($(current page.south)+(-4,2.6)$) -- ++(8,0);
+  \node[anchor=south,text=white!70,font=\small\addfontfeatures{LetterSpace=10}]
+    at ($(current page.south)+(0,1.7)$) {\CollectionYear};
+\end{tikzpicture}
+\end{titlepage}

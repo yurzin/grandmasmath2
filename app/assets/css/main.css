@@ -117,3 +117,18 @@
         display: none;
     }
 }
+
+/* Рисунки TikZ (SVG, отрисованы при импорте). Линии тёмные — в тёмной теме кладём на светлую подложку. */
+.math-content .tikz-figure {
+    margin: 1em auto;
+    max-width: 420px;
+    padding: 0.5em;
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.math-content .tikz-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+}

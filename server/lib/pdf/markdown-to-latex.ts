@@ -136,6 +136,13 @@ function renderBlocks(tokens: Token[], warnings: string[]): string {
             }
             case 'hr': blocks.push({ latex: '\\medskip\\noindent{\\color{rulegray}\\rule{\\linewidth}{0.4pt}}\\medskip' }); break
             case 'fence':
+                // Рисунок TikZ — в LaTeX как есть (tikz подключён в шаблоне).
+                if (t.info.trim() === 'tikz') {
+                    blocks.push({ latex: `\\begin{center}\n${t.content.trim()}\n\\end{center}` })
+                    break
+                }
+                blocks.push({ latex: `\\begin{verbatim}\n${t.content.replace(/\\end\{verbatim\}/g, '')}\\end{verbatim}` })
+                break
             case 'code_block':
                 blocks.push({ latex: `\\begin{verbatim}\n${t.content.replace(/\\end\{verbatim\}/g, '')}\\end{verbatim}` })
                 break

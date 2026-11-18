@@ -119,6 +119,9 @@ function convertBlocks(tex: string, warnings: string[]): string {
                 blocks.push(convertList(env, body, warnings))
             } else if (env === 'tabular') {
                 blocks.push(convertTabular(body, warnings))
+            } else if (env === 'tikzpicture') {
+                // Рисунок сохраняем кодом; SVG для сайта отрисовывает импорт (server/db/import/tikz-figures.ts).
+                blocks.push('```tikz\n' + `\\begin{tikzpicture}${body.replace(/\s+$/, '')}\n\\end{tikzpicture}` + '\n```')
             } else if (env === 'center') {
                 const inner = convertBlocks(body, warnings)
                 if (inner) blocks.push(inner)
@@ -291,6 +294,7 @@ function convertInline(tex: string, warnings: string[]): string {
         .replace(/--/g, '–')
         .replace(/~/g, NBSP)
         .replace(/\\,/g, NNBSP)
+        .replace(/\\ /g, ' ')
         .replace(/\\%/g, '%')
         .replace(/\\ldots\b\s?/g, '…')
         .replace(/\{,\}/g, ',')
@@ -305,6 +309,13 @@ function convertInline(tex: string, warnings: string[]): string {
 }
 
 function formatCommands(text: string): string {
+    // \texorpdfstring{для текста}{для закладок PDF} — на сайте нужен первый вариант.
+    let i: number
+    while ((i = text.indexOf('\\texorpdfstring{')) >= 0) {
+        const firstClose = matchBrace(text, i + '\\texorpdfstring'.length)
+        const secondClose = matchBrace(text, firstClose + 1)
+        text = text.slice(0, i) + text.slice(i + '\\texorpdfstring{'.length, firstClose) + text.slice(secondClose + 1)
+    }
     text = replaceCommand(text, 'emph', arg => `*${formatCommands(arg)}*`)
     return replaceCommand(text, 'textbf', arg => `**${formatCommands(arg)}**`)
 }
