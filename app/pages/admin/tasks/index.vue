@@ -7,6 +7,8 @@ const router = useRouter()
 
 const search = ref(typeof route.query.q === 'string' ? route.query.q : '')
 const collection = ref<string>(typeof route.query.collection === 'string' ? route.query.collection : 'all')
+const reviewOnly = ref(route.query.review === '1')
+const { data: review } = await useFetch<{ count: number }>('/api/admin/tasks/review-count', { key: 'admin-review-count' })
 const debouncedSearch = ref(search.value)
 let searchTimer: ReturnType<typeof setTimeout> | undefined
 watch(search, (value) => {
@@ -24,6 +26,7 @@ const collectionItems = computed(() => [
 const query = computed(() => ({
   q: debouncedSearch.value || undefined,
   collection: collection.value === 'all' ? undefined : collection.value,
+  review: reviewOnly.value ? '1' : undefined,
 }))
 watch(query, q => router.replace({ query: q }))
 
@@ -52,6 +55,15 @@ const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'short', timeSt
             :loading="status === 'pending'"
         />
         <USelect v-model="collection" :items="collectionItems" class="w-full sm:w-64"/>
+        <UButton
+            v-if="review?.count || reviewOnly"
+            icon="i-lucide-flag"
+            :color="reviewOnly ? 'warning' : 'neutral'"
+            :variant="reviewOnly ? 'soft' : 'outline'"
+            @click="reviewOnly = !reviewOnly"
+        >
+          На проверке: {{ review?.count ?? 0 }}
+        </UButton>
         <span class="sm:ml-auto self-center text-sm text-muted">
           {{ plural(tasks?.length ?? 0, ['задача', 'задачи', 'задач']) }}
         </span>
@@ -79,6 +91,17 @@ const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'short', timeSt
                 <NuxtLink :to="`/admin/tasks/${t.id}`" class="font-medium text-highlighted" @click.stop>
                   {{ t.title ?? t.label }}
                 </NuxtLink>
+                <UBadge
+                    v-if="t.reviewNote"
+                    color="warning"
+                    variant="subtle"
+                    size="sm"
+                    icon="i-lucide-flag"
+                    class="ml-2 align-middle"
+                    :title="t.reviewNote"
+                >
+                  на проверке
+                </UBadge>
                 <div v-if="t.title" class="text-xs text-dimmed">{{ t.label }}</div>
               </td>
               <td class="px-3 py-2 hidden md:table-cell text-muted">

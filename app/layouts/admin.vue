@@ -3,12 +3,20 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const { user, clear } = useUserSession()
 
-const links: NavigationMenuItem[] = [
-  { label: 'Задачи', icon: 'i-lucide-list-checks', to: '/admin/tasks' },
+// Значок «на проверке» у пункта «Задачи»; обновляется после кнопки «Проверено» (refreshNuxtData).
+const { data: review } = await useFetch<{ count: number }>('/api/admin/tasks/review-count', { key: 'admin-review-count' })
+
+const links = computed<NavigationMenuItem[]>(() => [
+  {
+    label: 'Задачи',
+    icon: 'i-lucide-list-checks',
+    to: '/admin/tasks',
+    badge: review.value?.count ? { label: String(review.value.count), color: 'warning', variant: 'subtle' } : undefined,
+  },
   { label: 'Сборники', icon: 'i-lucide-book-open', to: '/admin/collections' },
   { label: 'Справочники', icon: 'i-lucide-tags', to: '/admin/dictionaries' },
   { label: 'Продажи', icon: 'i-lucide-receipt', to: '/admin/sales' },
-]
+])
 
 async function logout() {
   await $fetch('/api/auth/logout', { method: 'POST' })

@@ -176,14 +176,17 @@ async function main() {
 
             let taskId = byPosition.get(t.position)
             if (taskId) {
-                await tx.update(tasks).set(values).where(eq(tasks.id, taskId))
+                // Пометку «на проверке», которую автор уже снял, повторный импорт с тем же текстом не возвращает.
+                const [current] = await tx.select({ cleared: tasks.reviewClearedNote }).from(tasks).where(eq(tasks.id, taskId))
+                const reviewNote = t.reviewNote && t.reviewNote !== current?.cleared ? t.reviewNote : null
+                await tx.update(tasks).set({ ...values, reviewNote }).where(eq(tasks.id, taskId))
                 await tx.delete(solutions).where(eq(solutions.taskId, taskId))
                 await tx.update(collectionTasks)
                     .set({ isFree: t.position <= config.freeCount })
                     .where(and(eq(collectionTasks.collectionId, collection!.id), eq(collectionTasks.taskId, taskId)))
                 updated++
             } else {
-                const [task] = await tx.insert(tasks).values(values).returning({ id: tasks.id })
+                const [task] = await tx.insert(tasks).values({ ...values, reviewNote: t.reviewNote }).returning({ id: tasks.id })
                 taskId = task!.id
                 await tx.insert(collectionTasks).values({
                     collectionId: collection!.id,
@@ -199,6 +202,8 @@ async function main() {
             )
         }
         console.log(`Сборник «${collection!.title}»: создано ${created}, обновлено ${updated}`)
+        const toReview = parsed.filter(t => t.reviewNote).map(t => t.position)
+        if (toReview.length) console.log(`На проверке у автора (по пометкам в исходнике): варианты ${toReview.join(', ')}`)
     })
 }
 

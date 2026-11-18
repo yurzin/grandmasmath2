@@ -7,7 +7,21 @@ export interface ParsedTask {
     body: string
     solutions: string[]
     answer: string
+    /** Текст комментариев перед задачей, если среди них есть «ПРОВЕРИТЬ АВТОРУ», иначе null. */
+    reviewNote: string | null
     warnings: string[]
+}
+
+export const REVIEW_MARKER = 'ПРОВЕРИТЬ АВТОРУ'
+
+/** Комментарии LaTeX перед \task (кроме разделителя «% ---------- сканы …») → пометка для проверки. */
+function reviewNoteFrom(comments: string): string | null {
+    const lines = comments.split('\n')
+        .map(l => l.trim())
+        .filter(l => l.startsWith('%') && !l.startsWith('% ----------'))
+        .map(l => l.replace(/^%\s*/, ''))
+    const text = lines.join(' ').trim()
+    return text.includes(REVIEW_MARKER) ? text : null
 }
 
 /** Аргумент команды \name{…} начиная с позиции from; возвращает [аргумент, позиция после }]. */
@@ -19,9 +33,14 @@ function readArg(s: string, from: number): [string, number] {
 
 /** Разбирает all_tasks.tex: \task{Вариант N}{тема}, uslovie, \reshenie, \drugoe, \otvet{…}. */
 export function parseCollection(tex: string): ParsedTask[] {
-    const chunks = tex.split(/(?=\\task\{)/).filter(c => c.startsWith('\\task{'))
+    // Комментарии перед \task относятся к этой задаче, поэтому режем перед строкой «% ---------- …» (если она есть).
+    const chunks: { comments: string, chunk: string }[] = []
+    for (const piece of tex.split(/(?=^% ---------- )/m)) {
+        const [before = '', ...tasks] = piece.split(/(?=\\task\{)/)
+        tasks.forEach((chunk, i) => chunks.push({ comments: i === 0 ? before : '', chunk }))
+    }
 
-    return chunks.map((chunk) => {
+    return chunks.map(({ comments, chunk }) => {
         const [variant, afterVariant] = readArg(chunk, 0)
         const [rawTitle] = readArg(chunk, afterVariant)
         const position = Number(variant.match(/\d+/)?.[0])
@@ -53,6 +72,7 @@ export function parseCollection(tex: string): ParsedTask[] {
             body: conv(latexToMarkdown(condMatch[1]!)),
             solutions,
             answer: conv(latexInlineToMarkdown(rawAnswer)).replace(/\.$/, ''),
+            reviewNote: reviewNoteFrom(comments),
             warnings: warnings.map(w => `Вариант ${position}: ${w}`),
         }
     })

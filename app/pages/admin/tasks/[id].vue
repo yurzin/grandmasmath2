@@ -121,6 +121,23 @@ async function save() {
   }
 }
 
+// «Проверено»: снимает пометку, оставленную при распознавании (сама задача не сохраняется).
+const markingReviewed = ref(false)
+async function markReviewed() {
+  if (!taskId.value) return
+  markingReviewed.value = true
+  try {
+    const result = await $fetch<AdminTask>(`/api/admin/tasks/${taskId.value}/reviewed`, { method: 'POST' })
+    if (loaded.value) loaded.value.reviewNote = result.reviewNote
+    await refreshNuxtData('admin-review-count')
+    toast.add({ title: 'Пометка снята', color: 'success', icon: 'i-lucide-check' })
+  } catch (e) {
+    toast.add({ title: 'Не удалось снять пометку', description: errorMessage(e), color: 'error' })
+  } finally {
+    markingReviewed.value = false
+  }
+}
+
 async function remove() {
   if (!taskId.value) return
   const where = loaded.value?.collections.length
@@ -180,6 +197,16 @@ if (import.meta.client) {
       <div v-if="loadError" class="py-12 text-center text-muted">Задача не найдена</div>
 
       <div v-else class="space-y-6 max-w-7xl">
+        <UAlert
+            v-if="loaded?.reviewNote"
+            color="warning"
+            variant="subtle"
+            icon="i-lucide-flag"
+            title="Задача ждёт вашей проверки"
+            :description="loaded.reviewNote"
+            :actions="[{ label: 'Проверено', icon: 'i-lucide-check', color: 'warning', variant: 'solid', loading: markingReviewed, onClick: markReviewed }]"
+        />
+
         <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <UFormField label="Заголовок" class="sm:col-span-2" hint="необязательно">
             <UInput v-model="form.title" placeholder="Например: Наибольший кредит…" class="w-full"/>

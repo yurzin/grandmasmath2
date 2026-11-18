@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, inArray, notExists, or, sql } from 'drizzle-orm'
+import { and, desc, eq, ilike, inArray, isNotNull, notExists, or, sql } from 'drizzle-orm'
 import { z } from 'zod'
 import { buildTaskLabel } from '../../../utils/tasks'
 
@@ -6,10 +6,12 @@ const querySchema = z.object({
     q: z.string().trim().optional(),
     // id сборника или 'none' — задачи вне сборников
     collection: z.union([z.literal('none'), z.coerce.number().int().positive()]).optional(),
+    // 1 — только задачи «на проверке» у автора
+    review: z.literal('1').optional(),
 })
 
 export default defineAdminHandler(async (event): Promise<AdminTaskListItem[]> => {
-    const { q, collection } = await getValidatedQuery(event, validator(querySchema))
+    const { q, collection, review } = await getValidatedQuery(event, validator(querySchema))
 
     const conditions = []
     if (q) {
@@ -21,6 +23,7 @@ export default defineAdminHandler(async (event): Promise<AdminTaskListItem[]> =>
             Number.isInteger(asId) ? eq(schema.tasks.id, asId) : undefined,
         ))
     }
+    if (review) conditions.push(isNotNull(schema.tasks.reviewNote))
     if (collection === 'none') {
         conditions.push(notExists(
             db.select({ one: sql`1` }).from(schema.collectionTasks)
@@ -39,6 +42,7 @@ export default defineAdminHandler(async (event): Promise<AdminTaskListItem[]> =>
             id: schema.tasks.id,
             title: schema.tasks.title,
             difficulty: schema.tasks.difficulty,
+            reviewNote: schema.tasks.reviewNote,
             updatedAt: schema.tasks.updatedAt,
             taskTypeNumber: schema.taskTypes.number,
             taskTypeName: schema.taskTypes.name,
@@ -69,6 +73,7 @@ export default defineAdminHandler(async (event): Promise<AdminTaskListItem[]> =>
         title: row.title,
         label: buildTaskLabel(row.taskTypeNumber, row.examLevel, row.taskTypeName),
         difficulty: row.difficulty,
+        reviewNote: row.reviewNote,
         updatedAt: row.updatedAt.toISOString(),
         collections: memberships
             .filter(m => m.taskId === row.id)

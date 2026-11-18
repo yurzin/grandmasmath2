@@ -43,6 +43,10 @@ export const tasks = pgTable('tasks', {
     /** Ответ для проверки в режиме «реши сам»: допустимые значения через «;» (числа или короткий текст). */
     answerKey: varchar({ length: 255 }),
     source: varchar({ length: 255 }),
+    /** Задача ждёт проверки автором: что не так (например, исправлен ответ рукописи). null — проверять не нужно. */
+    reviewNote: text(),
+    /** Пометка, которую автор уже снял кнопкой «Проверено»: повторный импорт с тем же текстом её не вернёт. */
+    reviewClearedNote: text(),
     createdAt: timestamp().notNull().defaultNow(),
     updatedAt: timestamp().notNull().defaultNow().$onUpdate(() => new Date()),
 })

@@ -7,6 +7,8 @@ export interface AdminTaskListItem {
     title: string | null
     label: string
     difficulty: number
+    /** Задача ждёт проверки автором: что не так; null — не ждёт. */
+    reviewNote: string | null
     updatedAt: string
     collections: { id: number, title: string, position: number }[]
 }
@@ -28,6 +30,8 @@ export interface AdminTaskInput {
 
 export interface AdminTask extends AdminTaskInput {
     id: number
+    /** Пометка «на проверке» (снимается кнопкой «Проверено», в форме не редактируется). */
+    reviewNote: string | null
     createdAt: string
     updatedAt: string
     collections: { id: number, title: string, slug: string, position: number }[]
