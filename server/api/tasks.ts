@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm'
-import { buildTaskHeight, buildTaskTitle, type TaskCard } from '../utils/tasks'
+import { buildTaskLabel } from '../utils/tasks'
 
 export default defineEventHandler(async (event): Promise<TaskCard[]> => {
     const query = getQuery(event)
@@ -12,6 +12,7 @@ export default defineEventHandler(async (event): Promise<TaskCard[]> => {
     const rows = await db
         .select({
             id: schema.tasks.id,
+            title: schema.tasks.title,
             body: schema.tasks.body,
             taskTypeNumber: schema.taskTypes.number,
             examLevel: schema.taskTypes.examLevel,
@@ -23,10 +24,13 @@ export default defineEventHandler(async (event): Promise<TaskCard[]> => {
         .where(conditions.length ? and(...conditions) : undefined)
         .orderBy(schema.tasks.id)
 
-    return rows.map((row) => ({
-        id: row.id,
-        title: buildTaskTitle(row.taskTypeNumber, row.examLevel, row.topicName),
-        description: row.body,
-        height: buildTaskHeight(row.body),
-    }))
+    return rows.map((row) => {
+        const label = buildTaskLabel(row.taskTypeNumber, row.examLevel, row.topicName)
+        return {
+            id: row.id,
+            title: row.title ?? label,
+            label,
+            excerptHtml: markdownExcerpt(row.body),
+        }
+    })
 })

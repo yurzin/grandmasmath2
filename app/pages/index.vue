@@ -1,11 +1,4 @@
 <script setup lang="ts">
-interface Task {
-  id: number
-  title: string
-  description: string
-  height: number
-}
-
 interface Topic { id: number; name: string }
 interface TaskType { id: number; number: number; examLevel: 'base' | 'profile'; name: string }
 
@@ -39,7 +32,7 @@ function resetFilters() {
   filters.difficulty = undefined
 }
 
-const { data: pins, pending } = await useFetch<Task[]>('/api/tasks', { query })
+const { data: pins, pending } = await useFetch<TaskCard[]>('/api/tasks', { query })
 </script>
 
 <template>
@@ -106,15 +99,16 @@ const { data: pins, pending } = await useFetch<Task[]>('/api/tasks', { query })
             :to="`/tasks/${pin.id}`"
             class="group block mb-3 sm:mb-4 break-inside-avoid rounded-xl overflow-hidden border border-default bg-default shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
         >
-          <div
-              class="flex items-center justify-center bg-elevated text-primary/60 transition-colors group-hover:text-primary"
-              :style="{ height: pin.height + 'px' }"
-          >
-            <UIcon name="i-lucide-image" class="size-8"/>
+          <div class="p-2.5 sm:p-3">
+            <span class="block text-[11px] sm:text-xs text-dimmed">{{ pin.label }}</span>
+            <p
+                v-if="pin.title !== pin.label"
+                class="mt-1 text-sm sm:text-base font-semibold text-highlighted transition-colors group-hover:text-primary"
+            >
+              {{ pin.title }}
+            </p>
+            <MathContent :html="pin.excerptHtml" class="mt-1.5 text-xs sm:text-sm text-muted line-clamp-6"/>
           </div>
-          <p class="p-2.5 sm:p-3 text-xs sm:text-sm text-muted">
-            {{ pin.description }}
-          </p>
         </NuxtLink>
       </div>
     </div>

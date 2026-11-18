@@ -4,3 +4,76 @@
 :root {
     --ui-primary: var(--color-blue-900);
 }
+
+/* Условия и решения задач: Markdown + KaTeX, см. MathContent.vue */
+.math-content {
+    line-height: 1.65;
+    overflow-wrap: break-word;
+
+    & > * + * {
+        margin-top: 0.75em;
+    }
+
+    & h2, & h3 {
+        margin-top: 1.25em;
+        font-weight: 600;
+        color: var(--ui-text-highlighted);
+    }
+
+    & h3 {
+        color: var(--ui-primary);
+    }
+
+    & ul, & ol {
+        padding-left: 1.5em;
+    }
+
+    & ul {
+        list-style: disc;
+    }
+
+    & ol {
+        list-style: decimal;
+    }
+
+    & li + li {
+        margin-top: 0.35em;
+    }
+
+    & strong {
+        font-weight: 600;
+        color: var(--ui-text-highlighted);
+    }
+
+    /* Длинные выкладки на телефоне прокручиваются, а не ломают вёрстку */
+    & .katex-display {
+        margin: 0.75em 0;
+        padding: 0.25em 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+    }
+
+    & table {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        border-collapse: collapse;
+        font-size: 0.95em;
+    }
+
+    & th, & td {
+        border: 1px solid var(--ui-border);
+        padding: 0.4em 0.75em;
+        vertical-align: top;
+    }
+
+    & th {
+        background: var(--ui-bg-muted);
+        font-weight: 600;
+    }
+
+    /* Таблицы без шапки (в LaTeX её не было) — скрываем пустую строку заголовков */
+    & thead:not(:has(th:not(:empty))) {
+        display: none;
+    }
+}

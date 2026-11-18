@@ -1,4 +1,4 @@
-import { pgTable, pgEnum, text, varchar, serial, integer, smallint, timestamp, unique, primaryKey } from 'drizzle-orm/pg-core'
+import { pgTable, pgEnum, text, varchar, serial, integer, smallint, boolean, timestamp, unique, primaryKey } from 'drizzle-orm/pg-core'
 
 export const users = pgTable('users', {
     id: serial().primaryKey(),
@@ -31,6 +31,8 @@ export const tasks = pgTable('tasks', {
     taskTypeId: integer().notNull().references(() => taskTypes.id),
     topicId: integer().references(() => topics.id),
     difficulty: integer().notNull().default(3),
+    title: varchar({ length: 255 }),
+    // Условие и решения хранятся в Markdown с формулами LaTeX ($…$, $$…$$).
     body: text().notNull(),
     imageUrl: varchar({ length: 500 }),
     answer: varchar({ length: 255 }).notNull(),
@@ -44,6 +46,33 @@ export const solutions = pgTable('solutions', {
     body: text().notNull(),
     sortOrder: smallint().notNull().default(1),
 })
+
+export const collectionStatusEnum = pgEnum('collection_status', ['draft', 'published', 'archived'])
+
+export const collections = pgTable('collections', {
+    id: serial().primaryKey(),
+    slug: varchar({ length: 255 }).notNull().unique(),
+    title: varchar({ length: 255 }).notNull(),
+    description: text(),
+    // Цена в рублях; null — цена ещё не назначена.
+    price: integer(),
+    status: collectionStatusEnum().notNull().default('draft'),
+    version: integer().notNull().default(1),
+    coverUrl: varchar({ length: 500 }),
+    createdAt: timestamp().notNull().defaultNow(),
+    updatedAt: timestamp().notNull().defaultNow().$onUpdate(() => new Date()),
+})
+
+export const collectionTasks = pgTable('collection_tasks', {
+    collectionId: integer().notNull().references(() => collections.id, { onDelete: 'cascade' }),
+    taskId: integer().notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+    position: smallint().notNull(),
+    // Бесплатные (демо) задачи сборника открыты всем, остальные — после покупки (этап 4).
+    isFree: boolean().notNull().default(false),
+}, (t) => [
+    primaryKey({ columns: [t.collectionId, t.taskId] }),
+    unique('uq_collection_tasks_position').on(t.collectionId, t.position),
+])
 
 export const tags = pgTable('tags', {
     id: serial().primaryKey(),

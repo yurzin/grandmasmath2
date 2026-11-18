@@ -10,6 +10,11 @@ const links = computed<NavigationMenuItem[]>(() => [{
   icon: 'i-lucide-house',
   active: route.path === '/'
 }, {
+  label: 'Сборники',
+  to: '/collections',
+  icon: 'i-lucide-book-open',
+  active: route.path.startsWith('/collections')
+}, {
   label: 'О нас',
   to: '/about',
   icon: 'i-lucide-info',

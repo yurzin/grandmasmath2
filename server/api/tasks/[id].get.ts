@@ -1,5 +1,5 @@
 import { asc, eq } from 'drizzle-orm'
-import { buildTaskHeight, buildTaskTitle, type TaskDetail } from '../../utils/tasks'
+import { buildTaskLabel } from '../../utils/tasks'
 
 export default defineEventHandler(async (event): Promise<TaskDetail> => {
     const id = Number(getRouterParam(event, 'id'))
@@ -10,9 +10,11 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
     const [row] = await db
         .select({
             id: schema.tasks.id,
+            title: schema.tasks.title,
             body: schema.tasks.body,
             answer: schema.tasks.answer,
             difficulty: schema.tasks.difficulty,
+            imageUrl: schema.tasks.imageUrl,
             taskTypeNumber: schema.taskTypes.number,
             taskTypeName: schema.taskTypes.name,
             examLevel: schema.taskTypes.examLevel,
@@ -26,22 +28,45 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
 
     if (!row) throw createError({ statusCode: 404, statusMessage: 'Не найдено' })
 
-    const solutionRows = await db
-        .select({ body: schema.solutions.body })
-        .from(schema.solutions)
-        .where(eq(schema.solutions.taskId, id))
-        .orderBy(asc(schema.solutions.sortOrder))
+    const [collectionRow] = await db
+        .select({
+            slug: schema.collections.slug,
+            title: schema.collections.title,
+            position: schema.collectionTasks.position,
+            isFree: schema.collectionTasks.isFree,
+        })
+        .from(schema.collectionTasks)
+        .innerJoin(schema.collections, eq(schema.collectionTasks.collectionId, schema.collections.id))
+        .where(eq(schema.collectionTasks.taskId, id))
+        .limit(1)
+
+    // Платные ответ и решения не покидают сервер.
+    const locked = !(await canViewSolution(event, collectionRow))
+    const solutionRows = locked
+        ? []
+        : await db
+            .select({ body: schema.solutions.body })
+            .from(schema.solutions)
+            .where(eq(schema.solutions.taskId, id))
+            .orderBy(asc(schema.solutions.sortOrder))
+
+    const label = buildTaskLabel(row.taskTypeNumber, row.examLevel, row.topicName)
 
     return {
         id: row.id,
-        title: buildTaskTitle(row.taskTypeNumber, row.examLevel, row.topicName),
-        description: row.body,
-        height: buildTaskHeight(row.body),
-        answer: row.answer,
+        title: row.title ?? label,
+        label,
+        bodyHtml: renderMarkdown(row.body),
+        locked,
+        answerHtml: locked ? null : renderMarkdownInline(row.answer),
+        solutionsHtml: solutionRows.map(s => renderMarkdown(s.body)),
         difficulty: row.difficulty,
         topic: row.topicName,
         taskType: row.taskTypeName,
         examLevel: row.examLevel,
-        solutions: solutionRows.map(s => s.body),
+        imageUrl: row.imageUrl,
+        collection: collectionRow
+            ? { slug: collectionRow.slug, title: collectionRow.title, position: collectionRow.position }
+            : null,
     }
 })

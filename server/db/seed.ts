@@ -208,9 +208,12 @@ async function main() {
         }).returning()
         const taskId = task!.id
 
-        await db.insert(solutions).values(
-            def.steps.map((body, i) => ({ taskId, body, sortOrder: i + 1 })),
-        )
+        // Одна запись = одно решение (Markdown); шаги — нумерованный список.
+        await db.insert(solutions).values({
+            taskId,
+            body: def.steps.map((step, i) => `${i + 1}. ${step}`).join('\n'),
+            sortOrder: 1,
+        })
 
         if (def.tagNames.length) {
             await db.insert(taskTags).values(

@@ -6,7 +6,7 @@ export default defineNuxtConfig({
             casing: 'snake_case'
         }
     },
-    css: ['~/assets/css/main.css'],
+    css: ['katex/dist/katex.min.css', '~/assets/css/main.css'],
     compatibilityDate: '2025-07-15',
     devtools: { enabled: true }
 })
