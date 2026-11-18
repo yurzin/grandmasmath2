@@ -1,8 +1,46 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
 
+/* Цвета логотипа: «чернила» (ink-900 = #23283F) и салатовый (sage-200 = #CFE3BD). */
+@theme static {
+    --font-sans: 'Golos Text', system-ui, sans-serif;
+    /* Узкий шрифт как «БАБУШКИНА» в логотипе — только для заголовков и крупных цифр. */
+    --font-display: 'Oswald', 'Arial Narrow', sans-serif;
+
+    --color-ink-50: #f4f5f8;
+    --color-ink-100: #e6e8ef;
+    --color-ink-200: #cdd1de;
+    --color-ink-300: #a6adc4;
+    --color-ink-400: #7a83a3;
+    --color-ink-500: #5a6385;
+    --color-ink-600: #464e6d;
+    --color-ink-700: #3a4059;
+    --color-ink-800: #2e3349;
+    --color-ink-900: #23283f;
+    --color-ink-950: #161929;
+
+    --color-sage-50: #f5f9f1;
+    --color-sage-100: #e8f2df;
+    --color-sage-200: #cfe3bd;
+    --color-sage-300: #b2d29a;
+    --color-sage-400: #93bd75;
+    --color-sage-500: #74a256;
+    --color-sage-600: #5a8342;
+    --color-sage-700: #466636;
+    --color-sage-800: #3a522f;
+    --color-sage-900: #314529;
+    --color-sage-950: #182513;
+}
+
 :root {
-    --ui-primary: var(--color-blue-900);
+    --ui-primary: var(--ui-color-primary-900);
+    --ui-secondary: var(--ui-color-secondary-700);
+    --ui-header-height: 4rem;
+}
+
+.dark {
+    --ui-primary: var(--ui-color-primary-200);
+    --ui-secondary: var(--ui-color-secondary-300);
 }
 
 /* Условия и решения задач: Markdown + KaTeX, см. MathContent.vue */

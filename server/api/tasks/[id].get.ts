@@ -62,8 +62,25 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
         taskType: row.taskTypeName,
         examLevel: row.examLevel,
         imageUrl: row.imageUrl,
-        collection: collectionRow
-            ? { slug: collectionRow.slug, title: collectionRow.title, position: collectionRow.position }
-            : null,
+        collection: collectionRow ? await collectionRef(id, collectionRow) : null,
     }
 })
+
+/** Место задачи в сборнике и её соседи по порядку. */
+async function collectionRef(taskId: number, m: { collectionId: number, slug: string, title: string, position: number }): Promise<TaskCollectionRef> {
+    const order = await db
+        .select({ taskId: schema.collectionTasks.taskId })
+        .from(schema.collectionTasks)
+        .where(eq(schema.collectionTasks.collectionId, m.collectionId))
+        .orderBy(asc(schema.collectionTasks.position))
+    const ids = order.map(r => r.taskId)
+    const index = ids.indexOf(taskId)
+    return {
+        slug: m.slug,
+        title: m.title,
+        position: m.position,
+        total: ids.length,
+        prevTaskId: ids[index - 1] ?? null,
+        nextTaskId: index >= 0 ? ids[index + 1] ?? null : null,
+    }
+}

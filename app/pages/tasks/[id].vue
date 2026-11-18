@@ -30,9 +30,17 @@ async function check() {
 }
 watch(myAnswer, () => (checkResult.value = null))
 
+// Переход к соседнему варианту — та же страница, поэтому сбрасываем ответ и раскрытое решение.
+watch(() => route.params.id, () => {
+  myAnswer.value = ''
+  checkResult.value = null
+  checkError.value = ''
+  showSolution.value = false
+})
+
 const back = computed(() => task.value?.collection
   ? { to: `/collections/${task.value.collection.slug}`, label: task.value.collection.title }
-  : { to: '/', label: 'На главную' })
+  : { to: '/tasks', label: 'Все задачи' })
 
 useSeoMeta({
   title: () => task.value ? task.value.title : 'Задача не найдена'
@@ -40,19 +48,44 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="max-w-3xl mx-auto p-3 sm:p-6">
-    <UButton
-        :to="back.to"
-        icon="i-lucide-arrow-left"
-        variant="ghost"
-        color="neutral"
-        size="sm"
-        class="mb-3 sm:mb-4"
-    >
-      {{ back.label }}
-    </UButton>
+  <div class="max-w-3xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
+    <div class="mb-3 sm:mb-4 flex items-center justify-between gap-2">
+      <UButton
+          :to="back.to"
+          icon="i-lucide-arrow-left"
+          variant="ghost"
+          color="neutral"
+          size="sm"
+          class="min-w-0"
+      >
+        <span class="truncate">{{ back.label }}</span>
+      </UButton>
 
-    <div v-if="task" class="rounded-lg border border-default bg-default overflow-hidden">
+      <!-- Соседние варианты сборника -->
+      <div v-if="task?.collection" class="flex flex-none items-center gap-1">
+        <UButton
+            :to="task.collection.prevTaskId ? `/tasks/${task.collection.prevTaskId}` : undefined"
+            :disabled="!task.collection.prevTaskId"
+            icon="i-lucide-chevron-left"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            aria-label="Предыдущий вариант"
+        />
+        <span class="text-sm text-muted tabular-nums">{{ task.collection.position }} из {{ task.collection.total }}</span>
+        <UButton
+            :to="task.collection.nextTaskId ? `/tasks/${task.collection.nextTaskId}` : undefined"
+            :disabled="!task.collection.nextTaskId"
+            icon="i-lucide-chevron-right"
+            color="neutral"
+            variant="ghost"
+            size="sm"
+            aria-label="Следующий вариант"
+        />
+      </div>
+    </div>
+
+    <div v-if="task" class="rounded-xl border border-default bg-default overflow-hidden">
       <img
           v-if="task.imageUrl"
           :src="task.imageUrl"
@@ -122,7 +155,7 @@ useSeoMeta({
                 :color="checkResult === null ? 'neutral' : checkResult ? 'success' : 'error'"
                 :highlight="checkResult !== null"
             />
-            <UButton type="submit" :loading="checking" :disabled="!myAnswer.trim()">Проверить</UButton>
+            <UButton type="submit" class="justify-center" :loading="checking" :disabled="!myAnswer.trim()">Проверить</UButton>
           </div>
           <p v-if="checkResult === true" class="text-sm text-success">Верно! Можно сверить ход решения.</p>
           <p v-else-if="checkResult === false" class="text-sm text-error">Пока неверно. Попробуйте ещё раз или посмотрите решение.</p>
@@ -178,7 +211,29 @@ useSeoMeta({
       </div>
     </div>
 
-    <div v-else class="flex flex-col items-center gap-3 py-12 sm:py-16 text-center">
+    <div v-if="task?.collection && (task.collection.prevTaskId || task.collection.nextTaskId)" class="mt-4 flex justify-between gap-3">
+      <UButton
+          v-if="task.collection.prevTaskId"
+          :to="`/tasks/${task.collection.prevTaskId}`"
+          icon="i-lucide-arrow-left"
+          color="neutral"
+          variant="outline"
+      >
+        Предыдущий
+      </UButton>
+      <span v-else/>
+      <UButton
+          v-if="task.collection.nextTaskId"
+          :to="`/tasks/${task.collection.nextTaskId}`"
+          trailing-icon="i-lucide-arrow-right"
+          color="neutral"
+          variant="outline"
+      >
+        Следующий
+      </UButton>
+    </div>
+
+    <div v-if="!task" class="flex flex-col items-center gap-3 py-12 sm:py-16 text-center">
       <UIcon name="i-lucide-search-x" class="size-10 text-dimmed"/>
       <p class="text-muted">Задача не найдена</p>
     </div>

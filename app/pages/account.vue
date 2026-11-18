@@ -19,7 +19,7 @@ const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
   <div class="max-w-3xl mx-auto p-3 sm:p-6">
     <div class="flex flex-wrap items-center gap-3">
       <div>
-        <h1 class="text-xl sm:text-2xl font-semibold text-highlighted">Мои покупки</h1>
+        <h1 class="font-display text-2xl sm:text-3xl font-semibold uppercase text-highlighted text-balance">Мои покупки</h1>
         <p class="text-sm text-muted">{{ user?.email }}</p>
       </div>
       <UButton class="ml-auto" icon="i-lucide-log-out" color="neutral" variant="ghost" @click="logout">Выйти</UButton>

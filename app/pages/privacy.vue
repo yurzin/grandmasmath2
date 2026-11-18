@@ -4,7 +4,7 @@ useSeoMeta({ title: 'Политика обработки персональны�
 
 <template>
   <div class="max-w-3xl mx-auto p-3 sm:p-6">
-    <h1 class="text-xl sm:text-2xl font-semibold text-highlighted">Политика обработки персональных данных</h1>
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold uppercase text-highlighted text-balance">Политика обработки персональных данных</h1>
     <!-- TODO(владелец): текст политики по 152-ФЗ (оператор, какие данные — email, цели — вход и
          выдача покупок, сроки хранения, где хранятся, права субъекта, контакты). -->
     <UAlert

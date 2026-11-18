@@ -41,7 +41,7 @@ async function buy() {
 </script>
 
 <template>
-  <div class="max-w-3xl mx-auto p-3 sm:p-6">
+  <div class="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
     <UButton
         to="/collections"
         icon="i-lucide-arrow-left"
@@ -54,7 +54,7 @@ async function buy() {
     </UButton>
 
     <template v-if="collection">
-      <h1 class="text-xl sm:text-2xl font-semibold text-highlighted">{{ collection.title }}</h1>
+      <h1 class="font-display text-2xl sm:text-4xl font-semibold uppercase text-highlighted text-balance">{{ collection.title }}</h1>
       <p v-if="collection.description" class="mt-2 text-sm sm:text-base text-muted">{{ collection.description }}</p>
       <p class="mt-2 text-sm text-muted">
         {{ plural(collection.tasks.length, ['задача', 'задачи', 'задач']) }}
@@ -62,7 +62,7 @@ async function buy() {
       </p>
 
       <!-- Покупка -->
-      <div class="mt-4 rounded-xl border border-default bg-default p-4 sm:p-5">
+      <div class="mt-5 rounded-xl border border-default bg-muted/50 p-4 sm:p-5">
         <div v-if="hasAccess" class="flex flex-col sm:flex-row sm:items-center gap-3">
           <UIcon name="i-lucide-circle-check" class="size-6 text-success flex-none"/>
           <p class="flex-1 text-sm sm:text-base text-muted">
@@ -77,7 +77,7 @@ async function buy() {
         <div v-else-if="collection.price" class="space-y-3">
           <div class="flex flex-col sm:flex-row sm:items-center gap-3">
             <div class="flex-1">
-              <p class="text-2xl font-semibold text-highlighted">{{ collection.price }} ₽</p>
+              <p class="font-display text-3xl font-semibold text-highlighted">{{ collection.price }} ₽</p>
               <p class="text-xs text-muted">PDF со всеми решениями и доступ к решениям на сайте</p>
             </div>
             <UButton size="lg" icon="i-lucide-shopping-cart" :loading="buying" :disabled="!agree" @click="buy">
@@ -104,16 +104,21 @@ async function buy() {
         </p>
       </div>
 
-      <ol class="mt-5 sm:mt-6 divide-y divide-default rounded-xl border border-default bg-default overflow-hidden">
+      <h2 class="mt-8 font-display text-xl font-semibold uppercase text-highlighted">Варианты</h2>
+      <ol class="mt-3 grid gap-2 sm:grid-cols-2">
         <li v-for="t in collection.tasks" :key="t.id">
           <NuxtLink
               :to="`/tasks/${t.id}`"
-              class="flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 transition-colors hover:bg-elevated"
+              class="group flex h-full items-center gap-3 rounded-lg border border-default bg-default px-3 py-2.5 transition-colors hover:border-accented hover:bg-elevated/60"
+              :class="t.solved ? 'border-success/40' : ''"
           >
-            <span class="flex-none w-20 text-xs sm:text-sm text-dimmed">Вариант {{ t.position }}</span>
-            <span class="flex-1 text-sm sm:text-base text-highlighted">{{ t.title }}</span>
+            <span
+                class="flex-none grid place-items-center size-9 rounded-md font-display text-base font-semibold tabular-nums"
+                :class="t.solved ? 'bg-success/15 text-success' : 'bg-muted text-highlighted'"
+            >{{ t.position }}</span>
+            <span class="flex-1 min-w-0 text-sm text-highlighted group-hover:text-primary transition-colors">{{ t.title ?? `Вариант ${t.position}` }}</span>
             <UIcon v-if="t.solved" name="i-lucide-circle-check" class="flex-none size-5 text-success" aria-label="Решено"/>
-            <UBadge v-if="t.isFree" color="success" variant="subtle" size="sm">бесплатно</UBadge>
+            <span v-else-if="t.isFree" class="flex-none text-xs font-medium text-success">бесплатно</span>
             <UIcon v-else-if="!hasAccess" name="i-lucide-lock" class="flex-none size-4 text-dimmed" aria-label="Решение в платной части"/>
           </NuxtLink>
         </li>

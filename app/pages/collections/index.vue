@@ -5,31 +5,19 @@ useSeoMeta({ title: 'Сборники задач ЕГЭ' })
 </script>
 
 <template>
-  <div class="max-w-5xl mx-auto p-3 sm:p-6">
-    <h1 class="text-xl sm:text-2xl font-semibold text-highlighted">Сборники задач</h1>
-    <p class="mt-1 text-sm sm:text-base text-muted">Подробные решения задач ЕГЭ по темам.</p>
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold uppercase text-highlighted">Сборники задач</h1>
+    <p class="mt-1 text-sm sm:text-base text-muted">Подробные решения задач ЕГЭ по темам. Каждый сборник — PDF и решения на сайте.</p>
 
     <p v-if="!collections?.length" class="mt-6 text-muted">Сборников пока нет.</p>
 
-    <div class="mt-4 sm:mt-6 grid gap-3 sm:gap-4 sm:grid-cols-2">
-      <NuxtLink
-          v-for="c in collections"
-          :key="c.slug"
-          :to="`/collections/${c.slug}`"
-          class="group flex flex-col rounded-xl border border-default bg-default p-4 sm:p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-      >
-        <div class="flex items-start gap-3">
-          <UIcon name="i-lucide-book-open" class="flex-none size-6 text-primary"/>
-          <h2 class="text-base sm:text-lg font-semibold text-highlighted group-hover:text-primary transition-colors">
-            {{ c.title }}
-          </h2>
-        </div>
-        <p v-if="c.description" class="mt-2 text-sm text-muted">{{ c.description }}</p>
-        <div class="mt-auto pt-4 flex items-center justify-between text-sm">
-          <span class="text-muted">{{ plural(c.taskCount, ['задача', 'задачи', 'задач']) }}</span>
-          <span v-if="c.price" class="font-semibold text-highlighted">{{ c.price }} ₽</span>
-        </div>
-      </NuxtLink>
+    <div class="mt-5 sm:mt-6 grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <CollectionTile v-for="c in collections" :key="c.slug" :collection="c"/>
     </div>
+
+    <p class="mt-6 text-sm text-muted">
+      Нужны все сборники сразу? <NuxtLink to="/subscription" class="text-primary underline">Подписка</NuxtLink>
+      открывает все решения, проверку ответов и PDF на выбранный срок.
+    </p>
   </div>
 </template>

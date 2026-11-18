@@ -1,43 +1,42 @@
 <script setup lang="ts">
-
 import type { NavigationMenuItem } from '@nuxt/ui'
 
 const route = useRoute()
 const { loggedIn } = useUserSession()
 
 const links = computed<NavigationMenuItem[]>(() => [{
-  label: 'Главная',
-  to: '/',
-  icon: 'i-lucide-house',
-  active: route.path === '/'
+  label: 'Задачи',
+  to: '/tasks',
+  icon: 'i-lucide-list-checks',
+  active: route.path === '/tasks' || route.path.startsWith('/tasks/')
 }, {
   label: 'Сборники',
   to: '/collections',
   icon: 'i-lucide-book-open',
   active: route.path.startsWith('/collections')
 }, {
+  label: 'Подписка',
+  to: '/subscription',
+  icon: 'i-lucide-calendar-check',
+  active: route.path.startsWith('/subscription')
+}, {
   label: 'О нас',
   to: '/about',
   icon: 'i-lucide-info',
   active: route.path.startsWith('/about')
-}, {
-  label: 'Контакты',
-  to: '/contacts',
-  icon: 'i-lucide-phone',
-  active: route.path.startsWith('/contacts')
-}
-])
+}])
 </script>
 
 <template>
   <UHeader>
     <template #left>
-      <AppLogo class="h-14 sm:h-20 w-auto"/>
+      <AppLogo/>
     </template>
 
-    <UNavigationMenu :items="links"/>
+    <UNavigationMenu :items="links" variant="link"/>
 
     <template #right>
+      <UColorModeButton color="neutral" variant="ghost"/>
       <UButton
           v-if="loggedIn"
           to="/account"

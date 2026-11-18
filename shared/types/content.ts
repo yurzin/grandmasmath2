@@ -10,12 +10,18 @@ export interface TaskCard {
     label: string
     /** HTML первого абзаца условия. */
     excerptHtml: string
+    /** Бесплатная (ответ и решение открыты всем). */
+    isFree: boolean
 }
 
 export interface TaskCollectionRef {
     slug: string
     title: string
     position: number
+    /** Всего задач в сборнике и соседние задачи — для навигации «← 2 · 3 · 4 →». */
+    total: number
+    prevTaskId: number | null
+    nextTaskId: number | null
 }
 
 export interface TaskDetail {

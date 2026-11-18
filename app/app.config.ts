@@ -1,15 +1,12 @@
 export default defineAppConfig({
     ui: {
         colors: {
-            primary: 'blue'
+            primary: 'ink',
+            secondary: 'sage',
+            neutral: 'slate'
         },
         main: {
-            base: 'min-h-[calc(100vh-var(--ui-header-height))] bg-gray-100'
-        },
-        header: {
-            slots: {
-                root: 'h-20 sm:h-28'
-            }
+            base: 'min-h-[calc(100vh-var(--ui-header-height))]'
         },
         navigationMenu: {
             compoundVariants: [{

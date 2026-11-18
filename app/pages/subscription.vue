@@ -39,8 +39,8 @@ async function subscribe(planId: number) {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto p-3 sm:p-6">
-    <h1 class="text-xl sm:text-2xl font-semibold text-highlighted">Подписка на все сборники</h1>
+  <div class="max-w-4xl mx-auto px-3 sm:px-6 py-6 sm:py-10">
+    <h1 class="font-display text-2xl sm:text-3xl font-semibold uppercase text-highlighted text-balance">Подписка на все сборники</h1>
     <p class="mt-1 text-sm sm:text-base text-muted">
       На выбранный срок открываются все сборники: подробные решения, проверка своих ответов и PDF.
       Без автосписаний — продлить можно в любой момент, новый срок добавится к текущему.
@@ -63,7 +63,7 @@ async function subscribe(planId: number) {
           class="flex flex-col rounded-xl border border-default bg-default p-5"
       >
         <p class="text-sm text-muted">{{ plural(p.months, ['месяц', 'месяца', 'месяцев']) }}</p>
-        <p class="mt-1 text-3xl font-semibold text-highlighted">{{ p.price.toLocaleString('ru-RU') }} ₽</p>
+        <p class="mt-1 font-display text-4xl font-semibold text-highlighted">{{ p.price.toLocaleString('ru-RU') }} ₽</p>
         <p class="mt-1 h-5 text-xs text-success">
           <template v-if="saving(p) > 0">выгоднее на {{ saving(p) }}%</template>
         </p>
