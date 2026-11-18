@@ -162,10 +162,8 @@ onBeforeRouteLeave(() => {
           <UFormField label="Название" class="sm:col-span-2">
             <UInput v-model="form.title" class="w-full"/>
           </UFormField>
-          <UFormField label="Адрес (slug)" hint="латиница и дефисы">
-            <UInput v-model="form.slug" placeholder="economic-tasks" class="w-full" @input="slugTouched = true">
-              <template #leading><span class="text-xs text-dimmed">/collections/</span></template>
-            </UInput>
+          <UFormField label="Адрес (slug)" hint="латиница и дефисы" :help="`На сайте: /collections/${form.slug || '…'}`">
+            <UInput v-model="form.slug" placeholder="economic-tasks" class="w-full" @input="slugTouched = true"/>
           </UFormField>
           <UFormField label="Статус">
             <USelect v-model="form.status" :items="statusItems" class="w-full"/>
