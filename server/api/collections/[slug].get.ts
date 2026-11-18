@@ -30,18 +30,28 @@ export default defineEventHandler(async (event): Promise<CollectionDetail> => {
         .where(eq(schema.collectionTasks.collectionId, collection.id))
         .orderBy(asc(schema.collectionTasks.position))
 
-    // Куплен ли сборник текущим пользователем.
+    // Для вошедшего: куплен ли сборник, есть ли подписка, какие задачи уже решены.
     const { user } = await getUserSession(event)
-    const [paid] = user
-        ? await db.select({ id: schema.purchases.id }).from(schema.purchases)
+    if (!user) return { ...collection, tasks: tasks.map(t => ({ ...t, solved: false })), purchaseId: null, subscriptionUntil: null }
+
+    const [[paid], subscription, solved] = await Promise.all([
+        db.select({ id: schema.purchases.id }).from(schema.purchases)
             .where(and(
                 eq(schema.purchases.userId, user.id),
+                eq(schema.purchases.kind, 'collection'),
                 eq(schema.purchases.collectionId, collection.id),
                 eq(schema.purchases.status, 'succeeded'),
             ))
             .orderBy(asc(schema.purchases.id))
-            .limit(1)
-        : []
+            .limit(1),
+        activeSubscription(user.id),
+        solvedTaskIds(user.id, tasks.map(t => t.id)),
+    ])
 
-    return { ...collection, tasks, purchaseId: paid?.id ?? null }
+    return {
+        ...collection,
+        tasks: tasks.map(t => ({ ...t, solved: solved.has(t.id) })),
+        purchaseId: paid?.id ?? null,
+        subscriptionUntil: subscription?.until.toISOString() ?? null,
+    }
 })

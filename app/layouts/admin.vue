@@ -7,6 +7,7 @@ const links: NavigationMenuItem[] = [
   { label: 'Задачи', icon: 'i-lucide-list-checks', to: '/admin/tasks' },
   { label: 'Сборники', icon: 'i-lucide-book-open', to: '/admin/collections' },
   { label: 'Справочники', icon: 'i-lucide-tags', to: '/admin/dictionaries' },
+  { label: 'Продажи', icon: 'i-lucide-receipt', to: '/admin/sales' },
 ]
 
 async function logout() {

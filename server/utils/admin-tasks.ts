@@ -31,6 +31,7 @@ export async function loadAdminTask(id: number): Promise<AdminTask> {
         difficulty: task.difficulty,
         body: task.body,
         answer: task.answer,
+        answerKey: task.answerKey,
         imageUrl: task.imageUrl,
         source: task.source,
         solutions: solutionRows.map(s => s.body),

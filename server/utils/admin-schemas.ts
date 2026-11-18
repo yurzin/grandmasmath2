@@ -12,6 +12,7 @@ export const taskInputSchema = z.object({
     difficulty: z.number().int().min(1).max(5),
     body: z.string().trim().min(1, 'Условие не может быть пустым'),
     answer: z.string().trim().min(1, 'Укажите ответ').max(255),
+    answerKey: optionalText(255),
     imageUrl: optionalText(500),
     source: optionalText(255),
     solutions: z.array(z.string().trim()).transform(list => list.filter(Boolean)),
@@ -38,6 +39,12 @@ export const topicInputSchema = z.object({
     // Пустой адрес — из названия.
     .transform(t => ({ ...t, slug: t.slug || slugify(t.name) }))
     .refine(t => SLUG_RE.test(t.slug), { path: ['slug'], message: 'Только латиница, цифры и дефисы' })
+
+export const planInputSchema = z.object({
+    months: z.number().int().min(1).max(36),
+    price: z.number().int().min(1),
+    active: z.boolean(),
+})
 
 export const taskTypeInputSchema = z.object({
     number: z.number().int().min(1).max(99),

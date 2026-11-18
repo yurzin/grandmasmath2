@@ -19,6 +19,8 @@ export interface AdminTaskInput {
     difficulty: number
     body: string
     answer: string
+    /** Ответ для проверки («реши сам»): значения через «;»; null — проверки нет. */
+    answerKey: string | null
     imageUrl: string | null
     source: string | null
     solutions: string[]
@@ -57,6 +59,28 @@ export interface AdminTaskTypeInput {
     number: number
     examLevel: ExamLevel
     name: string
+}
+
+export interface AdminPlan {
+    id: number
+    months: number
+    price: number
+    active: boolean
+}
+
+export interface AdminPurchase {
+    id: number
+    kind: 'collection' | 'subscription'
+    status: 'pending' | 'succeeded' | 'canceled'
+    amount: number
+    provider: string
+    months: number | null
+    accessUntil: string | null
+    downloadCount: number
+    createdAt: string
+    paidAt: string | null
+    email: string
+    collectionTitle: string | null
 }
 
 export interface AdminPdfStatus {

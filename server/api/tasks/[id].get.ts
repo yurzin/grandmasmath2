@@ -13,6 +13,7 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
             title: schema.tasks.title,
             body: schema.tasks.body,
             answer: schema.tasks.answer,
+            answerKey: schema.tasks.answerKey,
             difficulty: schema.tasks.difficulty,
             imageUrl: schema.tasks.imageUrl,
             taskTypeNumber: schema.taskTypes.number,
@@ -29,22 +30,13 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
     if (!row) throw createError({ statusCode: 404, message: 'Не найдено' })
 
     // Задача может входить в несколько сборников; для ссылки «назад» берём опубликованный.
-    const memberships = await db
-        .select({
-            collectionId: schema.collections.id,
-            slug: schema.collections.slug,
-            title: schema.collections.title,
-            status: schema.collections.status,
-            position: schema.collectionTasks.position,
-            isFree: schema.collectionTasks.isFree,
-        })
-        .from(schema.collectionTasks)
-        .innerJoin(schema.collections, eq(schema.collectionTasks.collectionId, schema.collections.id))
-        .where(eq(schema.collectionTasks.taskId, id))
+    const memberships = await taskMemberships(id)
     const collectionRow = memberships.find(m => m.status === 'published') ?? memberships[0]
 
     // Платные ответ и решения не покидают сервер.
     const locked = !(await canViewSolution(event, memberships))
+    const { user } = await getUserSession(event)
+    const solved = user && !locked ? (await solvedTaskIds(user.id, [id])).has(id) : false
     const solutionRows = locked
         ? []
         : await db
@@ -61,6 +53,8 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
         label,
         bodyHtml: renderMarkdown(row.body),
         locked,
+        checkable: !locked && Boolean(row.answerKey),
+        solved,
         answerHtml: locked ? null : renderMarkdownInline(row.answer),
         solutionsHtml: solutionRows.map(s => renderMarkdown(s.body)),
         difficulty: row.difficulty,

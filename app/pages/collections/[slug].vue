@@ -10,6 +10,10 @@ useSeoMeta({
 })
 
 const purchased = computed(() => Boolean(collection.value?.purchaseId))
+const subscribed = computed(() => Boolean(collection.value?.subscriptionUntil))
+const hasAccess = computed(() => purchased.value || subscribed.value)
+const solvedCount = computed(() => collection.value?.tasks.filter(t => t.solved).length ?? 0)
+const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
 const agree = ref(false)
 const buying = ref(false)
 const buyError = ref('')
@@ -52,14 +56,22 @@ async function buy() {
     <template v-if="collection">
       <h1 class="text-xl sm:text-2xl font-semibold text-highlighted">{{ collection.title }}</h1>
       <p v-if="collection.description" class="mt-2 text-sm sm:text-base text-muted">{{ collection.description }}</p>
-      <p class="mt-2 text-sm text-muted">{{ plural(collection.tasks.length, ['задача', 'задачи', 'задач']) }}</p>
+      <p class="mt-2 text-sm text-muted">
+        {{ plural(collection.tasks.length, ['задача', 'задачи', 'задач']) }}
+        <template v-if="solvedCount"> · решено {{ solvedCount }}</template>
+      </p>
 
       <!-- Покупка -->
       <div class="mt-4 rounded-xl border border-default bg-default p-4 sm:p-5">
-        <div v-if="purchased" class="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div v-if="hasAccess" class="flex flex-col sm:flex-row sm:items-center gap-3">
           <UIcon name="i-lucide-circle-check" class="size-6 text-success flex-none"/>
-          <p class="flex-1 text-sm sm:text-base text-muted">Сборник куплен: решения открыты, PDF в вашем кабинете.</p>
-          <UButton :to="`/api/purchases/${collection.purchaseId}/download`" external icon="i-lucide-download">Скачать PDF</UButton>
+          <p class="flex-1 text-sm sm:text-base text-muted">
+            <template v-if="purchased">Сборник куплен: решения открыты, PDF всегда в вашем кабинете.</template>
+            <template v-else>
+              Открыто по подписке до {{ dateFormat.format(new Date(collection.subscriptionUntil!)) }}: решения, проверка ответов и PDF.
+            </template>
+          </p>
+          <UButton :to="`/api/collections/${collection.slug}/download`" external icon="i-lucide-download">Скачать PDF</UButton>
         </div>
 
         <div v-else-if="collection.price" class="space-y-3">
@@ -85,6 +97,11 @@ async function buy() {
         </div>
 
         <p v-else class="text-sm text-muted">Скоро в продаже.</p>
+
+        <p v-if="!hasAccess" class="mt-3 border-t border-default pt-3 text-sm text-muted">
+          Или <NuxtLink to="/subscription" class="text-primary underline">подписка на все сборники</NuxtLink> —
+          решения, проверка ответов и PDF всех сборников на выбранный срок.
+        </p>
       </div>
 
       <ol class="mt-5 sm:mt-6 divide-y divide-default rounded-xl border border-default bg-default overflow-hidden">
@@ -95,8 +112,9 @@ async function buy() {
           >
             <span class="flex-none w-20 text-xs sm:text-sm text-dimmed">Вариант {{ t.position }}</span>
             <span class="flex-1 text-sm sm:text-base text-highlighted">{{ t.title }}</span>
+            <UIcon v-if="t.solved" name="i-lucide-circle-check" class="flex-none size-5 text-success" aria-label="Решено"/>
             <UBadge v-if="t.isFree" color="success" variant="subtle" size="sm">бесплатно</UBadge>
-            <UIcon v-else-if="!purchased" name="i-lucide-lock" class="flex-none size-4 text-dimmed" aria-label="Решение в платной части"/>
+            <UIcon v-else-if="!hasAccess" name="i-lucide-lock" class="flex-none size-4 text-dimmed" aria-label="Решение в платной части"/>
           </NuxtLink>
         </li>
       </ol>

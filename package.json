@@ -13,6 +13,7 @@
     "db:import-econ": "tsx server/db/import/econ.ts",
     "admin:create": "tsx server/db/create-admin.ts",
     "pdf:build": "tsx server/db/build-pdf.ts",
+    "db:answer-keys": "tsx server/db/fill-answer-keys.ts",
     "lint": "eslint .",
     "typecheck": "nuxt typecheck"
   },

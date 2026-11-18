@@ -6,6 +6,7 @@ useSeoMeta({ title: 'Оплата', robots: 'noindex' })
 const route = useRoute()
 const { data: purchase, refresh, error } = await useFetch<PurchaseItem>(() => `/api/purchases/${route.params.id}`)
 
+const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
 const gaveUp = ref(false)
 let timer: ReturnType<typeof setTimeout> | undefined
 let attempts = 0
@@ -37,18 +38,30 @@ onBeforeUnmount(() => clearTimeout(timer))
       <template v-else-if="purchase.status === 'succeeded'">
         <UIcon name="i-lucide-circle-check" class="size-12 text-success"/>
         <h1 class="text-lg font-semibold text-highlighted">Оплата прошла</h1>
-        <p class="text-sm text-muted">Сборник «{{ purchase.collection.title }}» ваш: решения открыты на сайте, PDF можно скачать.</p>
-        <div class="flex flex-col sm:flex-row justify-center gap-2 pt-2">
-          <UButton :to="`/api/purchases/${purchase.id}/download`" external icon="i-lucide-download">Скачать PDF</UButton>
-          <UButton :to="`/collections/${purchase.collection.slug}`" color="neutral" variant="outline">К сборнику</UButton>
-        </div>
+        <template v-if="purchase.collection">
+          <p class="text-sm text-muted">Сборник «{{ purchase.collection.title }}» ваш: решения открыты на сайте, PDF можно скачать.</p>
+          <div class="flex flex-col sm:flex-row justify-center gap-2 pt-2">
+            <UButton :to="`/api/purchases/${purchase.id}/download`" external icon="i-lucide-download">Скачать PDF</UButton>
+            <UButton :to="`/collections/${purchase.collection.slug}`" color="neutral" variant="outline">К сборнику</UButton>
+          </div>
+        </template>
+        <template v-else>
+          <p class="text-sm text-muted">
+            Подписка действует
+            <template v-if="purchase.accessFrom && purchase.accessUntil">
+              с {{ dateFormat.format(new Date(purchase.accessFrom)) }} по {{ dateFormat.format(new Date(purchase.accessUntil)) }}
+            </template>:
+            открыты все сборники, решения и PDF.
+          </p>
+          <UButton to="/collections" icon="i-lucide-book-open">К сборникам</UButton>
+        </template>
       </template>
 
       <template v-else-if="purchase.status === 'canceled'">
         <UIcon name="i-lucide-circle-x" class="size-12 text-error"/>
         <h1 class="text-lg font-semibold text-highlighted">Оплата не прошла</h1>
         <p class="text-sm text-muted">Деньги не списаны. Можно попробовать ещё раз.</p>
-        <UButton :to="`/collections/${purchase.collection.slug}`">Вернуться к сборнику</UButton>
+        <UButton :to="purchase.collection ? `/collections/${purchase.collection.slug}` : '/subscription'">Вернуться</UButton>
       </template>
 
       <template v-else>

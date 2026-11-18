@@ -15,6 +15,7 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { and, eq } from 'drizzle-orm'
 import { collections, collectionTasks, solutions, taskTypes, tasks, topics } from '../schema'
 import { parseCollection } from './parse-collection'
+import { suggestAnswerKey } from '../../../shared/utils/answer-key'
 import { renderMarkdown } from '../../utils/markdown'
 
 const DEFAULT_SOURCE = 'D:/work/Math/Economic/scan/build/all_tasks.tex'
@@ -115,6 +116,7 @@ async function main() {
                 title: t.title,
                 body: t.body,
                 answer: t.answer,
+                answerKey: suggestAnswerKey(t.answer),
                 source: `${COLLECTION.title}, вариант ${t.position}`,
             }
 

@@ -17,7 +17,8 @@ const [{ data: taskTypes, refresh: refreshTaskTypes }, { data: topics, refresh: 
 ])
 
 // В форме необязательные поля — строки; пустую строку сервер сохраняет как null.
-type TaskForm = Omit<AdminTaskInput, 'title' | 'imageUrl' | 'source'> & { title: string, imageUrl: string, source: string }
+type TaskForm = Omit<AdminTaskInput, 'title' | 'imageUrl' | 'source' | 'answerKey'>
+  & { title: string, imageUrl: string, source: string, answerKey: string }
 
 function emptyTask(): TaskForm {
   return {
@@ -27,6 +28,7 @@ function emptyTask(): TaskForm {
     difficulty: 3,
     body: '',
     answer: '',
+    answerKey: '',
     imageUrl: '',
     source: '',
     solutions: [''],
@@ -41,6 +43,7 @@ function toForm(t: AdminTask): TaskForm {
     difficulty: t.difficulty,
     body: t.body,
     answer: t.answer,
+    answerKey: t.answerKey ?? '',
     imageUrl: t.imageUrl ?? '',
     source: t.source ?? '',
     solutions: t.solutions.length ? [...t.solutions] : [''],
@@ -50,6 +53,15 @@ function toForm(t: AdminTask): TaskForm {
 const form = ref<TaskForm>(loaded.value ? toForm(loaded.value) : emptyTask())
 const saved = ref(JSON.stringify(form.value))
 const dirty = computed(() => JSON.stringify(form.value) !== saved.value)
+
+// «Реши сам»: ключ ответа и пробная проверка прямо в редакторе.
+const tryAnswer = ref('')
+const tryResult = computed(() => (tryAnswer.value.trim() && form.value.answerKey.trim()
+  ? checkAnswer(tryAnswer.value, form.value.answerKey)
+  : null))
+function fillAnswerKey() {
+  form.value.answerKey = suggestAnswerKey(form.value.answer)
+}
 
 useSeoMeta({
   title: () => (isNew.value ? 'Новая задача' : `Задача #${taskId.value}`) + ' — админка',
@@ -203,6 +215,37 @@ if (import.meta.client) {
         <AdminMarkdownField v-model="form.body" label="Условие" :rows="8"/>
 
         <AdminMarkdownField v-model="form.answer" label="Ответ" inline placeholder="Например: 5 млн рублей"/>
+
+        <div class="grid gap-2 sm:grid-cols-2">
+          <UFormField
+              label="Ответ для проверки («реши сам»)"
+              help="Допустимые значения через «;». Числа сравниваются как числа: 1 440 000 = 1440000. Пусто — проверки нет."
+          >
+            <UFieldGroup class="w-full">
+              <UInput v-model="form.answerKey" placeholder="1440; 1.44; 1440000" class="flex-1 min-w-0 font-mono"/>
+              <UButton
+                  color="neutral"
+                  variant="outline"
+                  icon="i-lucide-wand-sparkles"
+                  :disabled="!form.answer.trim()"
+                  @click="fillAnswerKey"
+              >
+                Из ответа
+              </UButton>
+            </UFieldGroup>
+          </UFormField>
+          <UFormField label="Попробовать ответ" help="Как его проверит сайт — без сохранения.">
+            <UInput v-model="tryAnswer" placeholder="Например: 1 440 000" class="w-full">
+              <template v-if="tryResult !== null" #trailing>
+                <UIcon
+                    :name="tryResult ? 'i-lucide-circle-check' : 'i-lucide-circle-x'"
+                    :class="tryResult ? 'text-success' : 'text-error'"
+                    class="size-5"
+                />
+              </template>
+            </UInput>
+          </UFormField>
+        </div>
 
         <div class="space-y-5">
           <AdminMarkdownField

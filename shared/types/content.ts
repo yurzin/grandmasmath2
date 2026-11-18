@@ -25,6 +25,10 @@ export interface TaskDetail {
     bodyHtml: string
     /** Ответ и решения закрыты (платная задача сборника) — answerHtml null, solutionsHtml пуст. */
     locked: boolean
+    /** «Реши сам»: у задачи есть ключ ответа и она доступна текущему пользователю. */
+    checkable: boolean
+    /** Текущий пользователь уже решил её верно. */
+    solved: boolean
     answerHtml: string | null
     solutionsHtml: string[]
     difficulty: number
@@ -47,23 +51,39 @@ export interface CollectionCard {
 
 export interface PurchaseItem {
     id: number
+    kind: 'collection' | 'subscription'
     status: 'pending' | 'succeeded' | 'canceled'
     amount: number
     createdAt: string
     paidAt: string | null
-    collection: { slug: string, title: string }
+    /** Для покупки сборника. */
+    collection: { slug: string, title: string } | null
+    /** Для подписки: срок и оплаченный период. */
+    months: number | null
+    accessFrom: string | null
+    accessUntil: string | null
     /** Ссылка, чтобы вернуться к незавершённой оплате. */
     confirmationUrl: string | null
+}
+
+export interface SubscriptionInfo {
+    plans: { id: number, months: number, price: number }[]
+    /** До какого момента у текущего пользователя есть доступ по подписке. */
+    activeUntil: string | null
 }
 
 export interface CollectionDetail extends Omit<CollectionCard, 'taskCount'> {
     id: number
     /** Текущий пользователь уже купил сборник (id оплаченной покупки). */
     purchaseId: number | null
+    /** У текущего пользователя действует подписка — до этого момента. */
+    subscriptionUntil: string | null
     tasks: {
         id: number
         position: number
         title: string | null
         isFree: boolean
+        /** Текущий пользователь решил задачу в режиме «реши сам». */
+        solved: boolean
     }[]
 }

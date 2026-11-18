@@ -21,6 +21,8 @@ const FIELD_LABELS: Record<string, string> = {
     coverUrl: 'Обложка',
     tasks: 'Задачи',
     name: 'Название',
+    months: 'Срок',
+    active: 'Активность',
     number: 'Номер задания',
     examLevel: 'Уровень',
     email: 'Email',

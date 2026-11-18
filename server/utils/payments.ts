@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { and, eq } from 'drizzle-orm'
+import { and, eq, gt } from 'drizzle-orm'
 
 export type PaymentState = 'pending' | 'succeeded' | 'canceled'
 
@@ -119,10 +119,48 @@ export async function syncPurchase(purchase: typeof schema.purchases.$inferSelec
         console.error(`[payments] Сумма платежа ${purchase.paymentId} (${amount}) не совпадает с покупкой #${purchase.id} (${purchase.amount})`)
         return purchase
     }
-    // Условие status = 'pending' — чтобы параллельные проверки не перетёрли друг друга.
-    const [updated] = await db.update(schema.purchases)
-        .set({ status: state, paidAt: state === 'succeeded' ? new Date() : null })
-        .where(and(eq(schema.purchases.id, purchase.id), eq(schema.purchases.status, 'pending')))
-        .returning()
-    return updated ?? purchase
+    if (state === 'canceled') {
+        const [updated] = await db.update(schema.purchases).set({ status: 'canceled' })
+            .where(and(eq(schema.purchases.id, purchase.id), eq(schema.purchases.status, 'pending')))
+            .returning()
+        return updated ?? purchase
+    }
+
+    // Оплачено. Условие status = 'pending' — чтобы параллельные проверки не перетёрли друг друга.
+    return await db.transaction(async (tx) => {
+        const now = new Date()
+        let period: { accessFrom: Date, accessUntil: Date } | null = null
+        if (purchase.kind === 'subscription') {
+            // Блокируем строку пользователя: два одновременных продления (даже самое первое)
+            // посчитают период по очереди и не лягут на одни и те же даты.
+            await tx.select({ id: schema.users.id }).from(schema.users)
+                .where(eq(schema.users.id, purchase.userId)).for('update')
+            const rows = await tx.select({ until: schema.purchases.accessUntil }).from(schema.purchases)
+                .where(and(
+                    eq(schema.purchases.userId, purchase.userId),
+                    eq(schema.purchases.kind, 'subscription'),
+                    eq(schema.purchases.status, 'succeeded'),
+                    gt(schema.purchases.accessUntil, now),
+                ))
+            const lastUntil = rows.reduce<Date | null>((max, r) => (r.until && (!max || r.until > max) ? r.until : max), null)
+            const accessFrom = lastUntil ?? now
+            period = { accessFrom, accessUntil: addMonths(accessFrom, purchase.months ?? 1) }
+        }
+        const [updated] = await tx.update(schema.purchases)
+            .set({ status: 'succeeded', paidAt: now, ...period })
+            .where(and(eq(schema.purchases.id, purchase.id), eq(schema.purchases.status, 'pending')))
+            .returning()
+        return updated ?? purchase
+    })
+}
+
+/** Дата + N месяцев (31 января + 1 месяц = последний день февраля). */
+export function addMonths(date: Date, months: number) {
+    const result = new Date(date)
+    const day = result.getDate()
+    result.setDate(1)
+    result.setMonth(result.getMonth() + months)
+    const lastDay = new Date(result.getFullYear(), result.getMonth() + 1, 0).getDate()
+    result.setDate(Math.min(day, lastDay))
+    return result
 }

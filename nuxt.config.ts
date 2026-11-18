@@ -12,6 +12,9 @@ export default defineNuxtConfig({
     nitro: {
         // Шаблон PDF-сборника (LaTeX, обложки, шрифт водяного знака) — читается через useStorage('assets:pdf-template').
         serverAssets: [{ baseName: 'pdf-template', dir: fileURLToPath(new URL('./server/pdf-template', import.meta.url)) }],
+        // Фоновые задачи (server/tasks): напоминания об окончании подписки — каждый день в 10:00 по времени сервера.
+        experimental: { tasks: true },
+        scheduledTasks: { '0 10 * * *': ['subscriptions:remind'] },
     },
     // Секреты и настройки продаж — через переменные окружения NUXT_* (см. .env.example).
     runtimeConfig: {

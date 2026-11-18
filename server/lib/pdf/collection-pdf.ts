@@ -70,10 +70,13 @@ export interface PreparedPdf {
 export async function preparePdf(db: Db, collectionId: number, source: TemplateSource): Promise<PreparedPdf | null> {
     const loaded = await loadPdfCollection(db, collectionId)
     if (!loaded) return null
+    // Переводы строк приводим к LF: git на Windows выгружает шаблоны с CRLF,
+    // и без этого хеш (а значит, кэш PDF) зависел бы от способа выгрузки файлов.
+    const read = async (path: string) => (await source.text(path))?.replace(/\r\n/g, '\n') ?? null
     const [main, cover, defaultCover] = await Promise.all([
-        source.text('main.tex'),
-        source.text(`covers/${loaded.data.slug}.tex`),
-        source.text('covers/default.tex'),
+        read('main.tex'),
+        read(`covers/${loaded.data.slug}.tex`),
+        read('covers/default.tex'),
     ])
     if (!main || !defaultCover) throw new Error('Не найден шаблон PDF (server/pdf-template)')
 

@@ -40,6 +40,8 @@ export const tasks = pgTable('tasks', {
     body: text().notNull(),
     imageUrl: varchar({ length: 500 }),
     answer: varchar({ length: 255 }).notNull(),
+    /** Ответ для проверки в режиме «реши сам»: допустимые значения через «;» (числа или короткий текст). */
+    answerKey: varchar({ length: 255 }),
     source: varchar({ length: 255 }),
     createdAt: timestamp().notNull().defaultNow(),
     updatedAt: timestamp().notNull().defaultNow().$onUpdate(() => new Date()),
@@ -107,14 +109,27 @@ export const loginTokens = pgTable('login_tokens', {
     index('idx_login_tokens_email').on(t.email),
 ])
 
-// ---------- Покупки (этап 4) ----------
+// ---------- Покупки: сборники (этап 4) и подписка (этап 5) ----------
 
+/** Тарифы подписки «доступ ко всем сборникам на срок». */
+export const subscriptionPlans = pgTable('subscription_plans', {
+    id: serial().primaryKey(),
+    months: smallint().notNull().unique(),
+    /** Цена в рублях. */
+    price: integer().notNull(),
+    /** Выключенный тариф не продаётся. */
+    active: boolean().notNull().default(false),
+})
+
+export const purchaseKindEnum = pgEnum('purchase_kind', ['collection', 'subscription'])
 export const purchaseStatusEnum = pgEnum('purchase_status', ['pending', 'succeeded', 'canceled'])
 
 export const purchases = pgTable('purchases', {
     id: serial().primaryKey(),
     userId: integer().notNull().references(() => users.id),
-    collectionId: integer().notNull().references(() => collections.id),
+    kind: purchaseKindEnum().notNull().default('collection'),
+    /** Для kind = 'collection'. */
+    collectionId: integer().references(() => collections.id),
     status: purchaseStatusEnum().notNull().default('pending'),
     /** Сумма в рублях на момент покупки. */
     amount: integer().notNull(),
@@ -122,10 +137,30 @@ export const purchases = pgTable('purchases', {
     provider: varchar({ length: 20 }).notNull(),
     paymentId: varchar({ length: 100 }).unique(),
     confirmationUrl: text(),
-    collectionVersion: integer().notNull(),
+    collectionVersion: integer(),
     downloadCount: integer().notNull().default(0),
+    /** Подписка: срок в месяцах; период доступа считается в момент оплаты (продление — с конца текущего). */
+    months: smallint(),
+    accessFrom: timestamp(),
+    accessUntil: timestamp(),
+    /** Когда отправили напоминание о скором окончании подписки. */
+    reminderSentAt: timestamp(),
     createdAt: timestamp().notNull().defaultNow(),
     paidAt: timestamp(),
 }, t => [
     index('idx_purchases_user').on(t.userId),
+])
+
+// ---------- «Реши сам» (этап 5) ----------
+
+/** Попытки ответа вошедших пользователей — для отметок «решено» и прогресса. */
+export const attempts = pgTable('attempts', {
+    id: serial().primaryKey(),
+    userId: integer().notNull().references(() => users.id, { onDelete: 'cascade' }),
+    taskId: integer().notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+    answer: varchar({ length: 255 }).notNull(),
+    correct: boolean().notNull(),
+    createdAt: timestamp().notNull().defaultNow(),
+}, t => [
+    index('idx_attempts_user_task').on(t.userId, t.taskId),
 ])

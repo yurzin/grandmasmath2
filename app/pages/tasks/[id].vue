@@ -4,6 +4,31 @@ const route = useRoute()
 const { data: task } = await useFetch<TaskDetail>(() => `/api/tasks/${route.params.id}`)
 
 const showSolution = ref(false)
+const { loggedIn } = useUserSession()
+
+// «Реши сам»
+const myAnswer = ref('')
+const checking = ref(false)
+const checkResult = ref<boolean | null>(null)
+const checkError = ref('')
+async function check() {
+  if (!task.value || !myAnswer.value.trim()) return
+  checking.value = true
+  checkError.value = ''
+  try {
+    const { correct } = await $fetch<{ correct: boolean }>(`/api/tasks/${task.value.id}/check`, {
+      method: 'POST',
+      body: { answer: myAnswer.value },
+    })
+    checkResult.value = correct
+    if (correct) task.value.solved = true
+  } catch (e) {
+    checkError.value = errorMessage(e, 'Не удалось проверить')
+  } finally {
+    checking.value = false
+  }
+}
+watch(myAnswer, () => (checkResult.value = null))
 
 const back = computed(() => task.value?.collection
   ? { to: `/collections/${task.value.collection.slug}`, label: task.value.collection.title }
@@ -62,8 +87,9 @@ useSeoMeta({
         >
           <UIcon name="i-lucide-lock" class="flex-none size-6 text-primary"/>
           <p class="flex-1 text-sm sm:text-base text-muted">
-            Ответ и подробное решение этой задачи — в сборнике
-            <span v-if="task.collection" class="font-medium text-highlighted">«{{ task.collection.title }}»</span>.
+            Ответ, подробное решение и проверка своего ответа — в сборнике
+            <span v-if="task.collection" class="font-medium text-highlighted">«{{ task.collection.title }}»</span>
+            или по <NuxtLink to="/subscription" class="text-primary underline">подписке на все сборники</NuxtLink>.
           </p>
           <UButton
               v-if="task.collection"
@@ -76,7 +102,38 @@ useSeoMeta({
           </UButton>
         </div>
 
-        <div v-else class="mt-5 sm:mt-6">
+        <!-- Реши сам -->
+        <form
+            v-if="task.checkable && !showSolution"
+            class="mt-5 sm:mt-6 rounded-lg border border-default p-3 sm:p-4 space-y-2"
+            @submit.prevent="check"
+        >
+          <div class="flex items-center gap-2">
+            <UIcon name="i-lucide-pencil-line" class="size-5 text-primary"/>
+            <span class="font-medium text-highlighted">Реши сам</span>
+            <UBadge v-if="task.solved" color="success" variant="subtle" size="sm" icon="i-lucide-check">решено</UBadge>
+          </div>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <UInput
+                v-model="myAnswer"
+                placeholder="Ваш ответ — число"
+                inputmode="decimal"
+                class="flex-1"
+                :color="checkResult === null ? 'neutral' : checkResult ? 'success' : 'error'"
+                :highlight="checkResult !== null"
+            />
+            <UButton type="submit" :loading="checking" :disabled="!myAnswer.trim()">Проверить</UButton>
+          </div>
+          <p v-if="checkResult === true" class="text-sm text-success">Верно! Можно сверить ход решения.</p>
+          <p v-else-if="checkResult === false" class="text-sm text-error">Пока неверно. Попробуйте ещё раз или посмотрите решение.</p>
+          <p v-if="checkError" class="text-sm text-error">{{ checkError }}</p>
+          <p v-if="!loggedIn" class="text-xs text-dimmed">
+            <NuxtLink :to="{ path: '/login', query: { redirect: route.fullPath } }" class="underline">Войдите</NuxtLink>,
+            чтобы решённые задачи отмечались в сборниках.
+          </p>
+        </form>
+
+        <div v-if="!task.locked" class="mt-5 sm:mt-6">
           <UButton
               v-if="!showSolution"
               icon="i-lucide-eye"
