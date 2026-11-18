@@ -1,35 +1,26 @@
 <script setup lang="ts">
-interface Topic { id: number; name: string }
-interface TaskType { id: number; number: number; examLevel: 'base' | 'profile'; name: string }
+interface TaskType { id: number, number: number, examLevel: 'base' | 'profile', name: string, taskCount: number }
 
-const { data: topics } = await useFetch<Topic[]>('/api/topics')
-const { data: taskTypes } = await useFetch<TaskType[]>('/api/task-types')
+// Фильтр по реальным номерам заданий ЕГЭ — только тем, по которым на сайте есть задачи.
+const { data: taskTypes } = await useFetch<TaskType[]>('/api/task-types', { query: { used: 1 } })
 
-const filters = reactive<{ topic?: string, taskType?: string, difficulty?: string }>({
-  topic: undefined,
-  taskType: undefined,
-  difficulty: undefined,
-})
+const filters = reactive<{ taskType?: string, free: boolean }>({ taskType: undefined, free: false })
 
-const topicItems = computed(() => (topics.value ?? []).map((t) => ({ label: t.name, value: String(t.id) })))
-const taskTypeItems = computed(() => (taskTypes.value ?? []).map((tt) => ({
-  label: `№${tt.number} (${tt.examLevel === 'base' ? 'база' : 'профиль'}) — ${tt.name}`,
+const taskTypeItems = computed(() => (taskTypes.value ?? []).map(tt => ({
+  label: `${taskTypeLabel(tt.number, tt.examLevel, tt.name)} (${tt.taskCount})`,
   value: String(tt.id),
 })))
-const difficultyItems = [1, 2, 3, 4, 5].map((d) => ({ label: `Сложность ${d}`, value: String(d) }))
 
 const query = computed(() => ({
-  topic: filters.topic,
   task_type: filters.taskType,
-  difficulty: filters.difficulty,
+  free: filters.free ? 1 : undefined,
 }))
 
-const hasFilters = computed(() => Boolean(filters.topic || filters.taskType || filters.difficulty))
+const hasFilters = computed(() => Boolean(filters.taskType || filters.free))
 
 function resetFilters() {
-  filters.topic = undefined
   filters.taskType = undefined
-  filters.difficulty = undefined
+  filters.free = false
 }
 
 const { data: pins, pending } = await useFetch<TaskCard[]>('/api/tasks', { query })
@@ -54,31 +45,13 @@ useSeoMeta({ title: 'Задачи ЕГЭ с решениями' })
             v-model="filters.taskType"
             :items="taskTypeItems"
             icon="i-lucide-hash"
-            placeholder="Все номера ЕГЭ"
+            placeholder="Все задания ЕГЭ"
             color="neutral"
             variant="outline"
-            class="w-full sm:w-72"
+            class="w-full sm:w-96"
         />
 
-        <USelect
-            v-model="filters.topic"
-            :items="topicItems"
-            icon="i-lucide-shapes"
-            placeholder="Все темы"
-            color="neutral"
-            variant="outline"
-            class="w-full sm:w-56"
-        />
-
-        <USelect
-            v-model="filters.difficulty"
-            :items="difficultyItems"
-            icon="i-lucide-gauge"
-            placeholder="Любая сложность"
-            color="neutral"
-            variant="outline"
-            class="w-full sm:w-48"
-        />
+        <USwitch v-model="filters.free" label="Только бесплатные"/>
 
         <UButton
             v-if="hasFilters"

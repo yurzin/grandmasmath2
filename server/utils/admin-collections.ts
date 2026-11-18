@@ -38,6 +38,7 @@ export async function loadTaskTitles(ids: number[]): Promise<Record<number, stri
             id: schema.tasks.id,
             title: schema.tasks.title,
             taskTypeNumber: schema.taskTypes.number,
+            taskTypeName: schema.taskTypes.name,
             examLevel: schema.taskTypes.examLevel,
             topicName: schema.topics.name,
         })
@@ -47,7 +48,7 @@ export async function loadTaskTitles(ids: number[]): Promise<Record<number, stri
         .where(inArray(schema.tasks.id, ids))
     return Object.fromEntries(rows.map(r => [
         r.id,
-        r.title ?? buildTaskLabel(r.taskTypeNumber, r.examLevel, r.topicName),
+        r.title ?? buildTaskLabel(r.taskTypeNumber, r.examLevel, r.taskTypeName),
     ]))
 }
 

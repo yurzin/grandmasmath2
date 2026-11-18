@@ -37,8 +37,8 @@ export interface TaskDetail {
     solved: boolean
     answerHtml: string | null
     solutionsHtml: string[]
-    difficulty: number
-    topic: string | null
+    /** Номер задания ЕГЭ и его название («Экономическая задача»). */
+    taskNumber: number
     taskType: string
     examLevel: ExamLevel
     imageUrl: string | null

@@ -1,9 +1,4 @@
-const examLevelLabel: Record<ExamLevel, string> = {
-    base: 'база',
-    profile: 'профиль',
-}
-
-export function buildTaskLabel(taskTypeNumber: number, examLevel: ExamLevel, topicName: string | null) {
-    const prefix = `№${taskTypeNumber} (${examLevelLabel[examLevel]})`
-    return topicName ? `${prefix} · ${topicName}` : prefix
+/** Подпись задачи по реальному номеру задания ЕГЭ, например «Задание 16 · Экономическая задача». */
+export function buildTaskLabel(taskTypeNumber: number, examLevel: ExamLevel, taskTypeName: string) {
+    return taskTypeLabel(taskTypeNumber, examLevel, taskTypeName)
 }

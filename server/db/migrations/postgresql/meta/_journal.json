@@ -43,6 +43,13 @@
       "when": 1794980058709,
       "tag": "0005_redundant_lightspeed",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794989100338,
+      "tag": "0006_real_ege_task_types",
+      "breakpoints": true
     }
   ]
 }

@@ -41,6 +41,7 @@ export default defineAdminHandler(async (event): Promise<AdminTaskListItem[]> =>
             difficulty: schema.tasks.difficulty,
             updatedAt: schema.tasks.updatedAt,
             taskTypeNumber: schema.taskTypes.number,
+            taskTypeName: schema.taskTypes.name,
             examLevel: schema.taskTypes.examLevel,
             topicName: schema.topics.name,
         })
@@ -66,7 +67,7 @@ export default defineAdminHandler(async (event): Promise<AdminTaskListItem[]> =>
     return rows.map(row => ({
         id: row.id,
         title: row.title,
-        label: buildTaskLabel(row.taskTypeNumber, row.examLevel, row.topicName),
+        label: buildTaskLabel(row.taskTypeNumber, row.examLevel, row.taskTypeName),
         difficulty: row.difficulty,
         updatedAt: row.updatedAt.toISOString(),
         collections: memberships

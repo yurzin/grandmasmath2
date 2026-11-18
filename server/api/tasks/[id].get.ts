@@ -14,16 +14,13 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
             body: schema.tasks.body,
             answer: schema.tasks.answer,
             answerKey: schema.tasks.answerKey,
-            difficulty: schema.tasks.difficulty,
             imageUrl: schema.tasks.imageUrl,
             taskTypeNumber: schema.taskTypes.number,
             taskTypeName: schema.taskTypes.name,
             examLevel: schema.taskTypes.examLevel,
-            topicName: schema.topics.name,
         })
         .from(schema.tasks)
         .innerJoin(schema.taskTypes, eq(schema.tasks.taskTypeId, schema.taskTypes.id))
-        .leftJoin(schema.topics, eq(schema.tasks.topicId, schema.topics.id))
         .where(eq(schema.tasks.id, id))
         .limit(1)
 
@@ -45,7 +42,7 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
             .where(eq(schema.solutions.taskId, id))
             .orderBy(asc(schema.solutions.sortOrder))
 
-    const label = buildTaskLabel(row.taskTypeNumber, row.examLevel, row.topicName)
+    const label = buildTaskLabel(row.taskTypeNumber, row.examLevel, row.taskTypeName)
 
     return {
         id: row.id,
@@ -57,8 +54,7 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
         solved,
         answerHtml: locked ? null : renderMarkdownInline(row.answer),
         solutionsHtml: solutionRows.map(s => renderMarkdown(s.body)),
-        difficulty: row.difficulty,
-        topic: row.topicName,
+        taskNumber: row.taskTypeNumber,
         taskType: row.taskTypeName,
         examLevel: row.examLevel,
         imageUrl: row.imageUrl,

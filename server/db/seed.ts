@@ -1,6 +1,7 @@
 import postgres from 'postgres'
 import { drizzle } from 'drizzle-orm/postgres-js'
 import { topics, taskTypes, tasks, solutions, tags, taskTags } from './schema'
+import { EGE_PROFILE_TASKS } from '../../shared/utils/ege'
 
 process.loadEnvFile('.env')
 
@@ -22,18 +23,10 @@ async function main() {
     const topic = Object.fromEntries(topicRows.map(t => [t.slug, t.id]))
 
     console.log('Seeding task types...')
-    const taskTypeRows = await db.insert(taskTypes).values([
-        { number: 1, examLevel: 'profile', name: 'Задачи на проценты и практические расчёты' },
-        { number: 2, examLevel: 'profile', name: 'Анализ графиков и диаграмм' },
-        { number: 3, examLevel: 'profile', name: 'Планиметрия: базовые задачи по рисунку' },
-        { number: 4, examLevel: 'profile', name: 'Теория вероятностей' },
-        { number: 5, examLevel: 'profile', name: 'Простейшие уравнения' },
-        { number: 7, examLevel: 'profile', name: 'Производная и физический смысл' },
-        { number: 8, examLevel: 'profile', name: 'Стереометрия' },
-        { number: 12, examLevel: 'profile', name: 'Наибольшее и наименьшее значение функции' },
-        { number: 1, examLevel: 'base', name: 'Арифметические вычисления' },
-        { number: 5, examLevel: 'base', name: 'Простейшие текстовые задачи' },
-    ]).returning()
+    // Все задания профильного ЕГЭ с реальными названиями (shared/utils/ege.ts).
+    const taskTypeRows = await db.insert(taskTypes).values(
+        Object.entries(EGE_PROFILE_TASKS).map(([number, name]) => ({ number: Number(number), examLevel: 'profile' as const, name })),
+    ).returning()
     const type = (number: number, level: 'base' | 'profile') =>
         taskTypeRows.find(t => t.number === number && t.examLevel === level)!.id
 
@@ -52,7 +45,7 @@ async function main() {
 
     const taskDefs = [
         {
-            taskTypeId: type(1, 'profile'), topicId: topic['text-problems'], difficulty: 1,
+            taskTypeId: type(10, 'profile'), topicId: topic['text-problems'], difficulty: 1,
             body: 'Билет на автобус стоит 55 рублей. Школьникам предоставляется скидка 40%. Сколько рублей стоит билет для школьника?',
             answer: '33',
             source: 'Тренировочный банк заданий',
@@ -63,7 +56,7 @@ async function main() {
             ],
         },
         {
-            taskTypeId: type(1, 'profile'), topicId: topic['text-problems'], difficulty: 2,
+            taskTypeId: type(10, 'profile'), topicId: topic['text-problems'], difficulty: 2,
             body: 'Оптовая цена учебника 260 рублей. Розничная цена на 15% выше оптовой. Найдите розничную цену учебника в рублях.',
             answer: '299',
             source: 'Тренировочный банк заданий',
@@ -74,7 +67,7 @@ async function main() {
             ],
         },
         {
-            taskTypeId: type(2, 'profile'), topicId: topic['graphs'], difficulty: 2,
+            taskTypeId: type(9, 'profile'), topicId: topic['graphs'], difficulty: 2,
             body: 'Среднемесячные продажи товара по месяцам (в тыс. руб.): январь — 120, февраль — 95, март — 140, апрель — 160, май — 130. Укажите наибольшее значение продаж среди перечисленных месяцев (в тыс. руб.).',
             answer: '160',
             source: 'Тренировочный банк заданий',
@@ -85,7 +78,7 @@ async function main() {
             ],
         },
         {
-            taskTypeId: type(3, 'profile'), topicId: topic['planimetry'], difficulty: 3,
+            taskTypeId: type(1, 'profile'), topicId: topic['planimetry'], difficulty: 3,
             body: 'В прямоугольном треугольнике катеты равны 6 и 8. Найдите гипотенузу этого треугольника.',
             answer: '10',
             source: 'Тренировочный банк заданий',
@@ -95,7 +88,7 @@ async function main() {
             ],
         },
         {
-            taskTypeId: type(3, 'profile'), topicId: topic['planimetry'], difficulty: 3,
+            taskTypeId: type(1, 'profile'), topicId: topic['planimetry'], difficulty: 3,
             body: 'Площадь треугольника равна 48. Основание треугольника равно 12. Найдите высоту, проведённую к этому основанию.',
             answer: '8',
             source: 'Тренировочный банк заданий',
@@ -117,7 +110,7 @@ async function main() {
             ],
         },
         {
-            taskTypeId: type(5, 'profile'), topicId: topic['equations'], difficulty: 2,
+            taskTypeId: type(6, 'profile'), topicId: topic['equations'], difficulty: 2,
             body: 'Найдите корень уравнения: log₂(3x − 5) = 4.',
             answer: '7',
             source: 'Тренировочный банк заданий',
@@ -128,7 +121,7 @@ async function main() {
             ],
         },
         {
-            taskTypeId: type(5, 'profile'), topicId: topic['equations'], difficulty: 2,
+            taskTypeId: type(6, 'profile'), topicId: topic['equations'], difficulty: 2,
             body: 'Найдите корень уравнения: 5^(x+1) = 125.',
             answer: '2',
             source: 'Тренировочный банк заданий',
@@ -139,7 +132,7 @@ async function main() {
             ],
         },
         {
-            taskTypeId: type(7, 'profile'), topicId: topic['derivative'], difficulty: 4,
+            taskTypeId: type(8, 'profile'), topicId: topic['derivative'], difficulty: 4,
             body: 'Материальная точка движется прямолинейно по закону x(t) = t³ − 3t² − 45t + 10, где x — расстояние от точки отсчёта в метрах, t — время в секундах. Найдите скорость точки (в м/с) в момент времени t = 5 с.',
             answer: '0',
             source: 'Тренировочный банк заданий',
@@ -150,7 +143,7 @@ async function main() {
             ],
         },
         {
-            taskTypeId: type(8, 'profile'), topicId: topic['stereometry'], difficulty: 4,
+            taskTypeId: type(3, 'profile'), topicId: topic['stereometry'], difficulty: 4,
             body: 'Объём куба равен 64. Найдите площадь поверхности этого куба.',
             answer: '96',
             source: 'Тренировочный банк заданий',
@@ -173,7 +166,7 @@ async function main() {
             ],
         },
         {
-            taskTypeId: type(1, 'base'), topicId: topic['text-problems'], difficulty: 1,
+            taskTypeId: type(7, 'profile'), topicId: topic['text-problems'], difficulty: 1,
             body: 'Найдите значение выражения 2,7 · 4 − 3,2.',
             answer: '7.6',
             source: 'Тренировочный банк заданий',
@@ -184,7 +177,7 @@ async function main() {
             ],
         },
         {
-            taskTypeId: type(5, 'base'), topicId: topic['text-problems'], difficulty: 1,
+            taskTypeId: type(10, 'profile'), topicId: topic['text-problems'], difficulty: 1,
             body: 'Клиент взял в банке кредит 10000 рублей на год под 12% годовых. Он должен погасить кредит, заплатив банку 10000 рублей и проценты за пользование кредитом. Сколько рублей клиент должен заплатить банку?',
             answer: '11200',
             source: 'Тренировочный банк заданий',

@@ -95,20 +95,16 @@ useSeoMeta({
 
       <div class="p-3 sm:p-6">
         <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
-          <UBadge :color="task.examLevel === 'profile' ? 'primary' : 'neutral'" variant="subtle" size="sm" class="sm:text-sm sm:px-2.5 sm:py-1">
-            {{ task.examLevel === 'profile' ? 'Профильный уровень' : 'Базовый уровень' }}
-          </UBadge>
-          <UBadge v-if="task.topic" color="neutral" variant="outline" size="sm" class="sm:text-sm sm:px-2.5 sm:py-1">
-            {{ task.topic }}
+          <UBadge color="primary" variant="subtle" size="sm" class="sm:text-sm sm:px-2.5 sm:py-1">
+            ЕГЭ {{ task.examLevel === 'profile' ? 'профиль' : 'база' }} · задание {{ task.taskNumber }}
           </UBadge>
           <UBadge color="neutral" variant="outline" size="sm" class="sm:text-sm sm:px-2.5 sm:py-1">
-            Сложность: {{ task.difficulty }}/5
+            {{ task.taskType }}
           </UBadge>
         </div>
 
-        <span class="block mt-2.5 sm:mt-3 text-xs text-muted">
-          <template v-if="task.collection">Вариант {{ task.collection.position }} · </template>
-          {{ task.taskType }}
+        <span v-if="task.collection" class="block mt-2.5 sm:mt-3 text-xs text-muted">
+          Вариант {{ task.collection.position }} из сборника «{{ task.collection.title }}»
         </span>
         <h1 class="mt-1.5 text-lg sm:text-xl font-semibold text-highlighted">{{ task.title }}</h1>
 

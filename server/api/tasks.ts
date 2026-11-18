@@ -28,18 +28,17 @@ export default defineEventHandler(async (event): Promise<TaskCard[]> => {
             title: schema.tasks.title,
             body: schema.tasks.body,
             taskTypeNumber: schema.taskTypes.number,
+            taskTypeName: schema.taskTypes.name,
             examLevel: schema.taskTypes.examLevel,
-            topicName: schema.topics.name,
         })
         .from(schema.tasks)
         .innerJoin(schema.taskTypes, eq(schema.tasks.taskTypeId, schema.taskTypes.id))
-        .leftJoin(schema.topics, eq(schema.tasks.topicId, schema.topics.id))
         .where(conditions.length ? and(...conditions) : undefined)
         .orderBy(schema.tasks.id)
         .limit(limit)
 
     return rows.map((row) => {
-        const label = buildTaskLabel(row.taskTypeNumber, row.examLevel, row.topicName)
+        const label = buildTaskLabel(row.taskTypeNumber, row.examLevel, row.taskTypeName)
         return {
             id: row.id,
             title: row.title ?? label,
