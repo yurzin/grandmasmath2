@@ -40,13 +40,14 @@ const links = computed<NavigationMenuItem[]>(() => [{
       <UButton
           v-if="loggedIn"
           to="/account"
+          class="lg:-mr-2.5"
           icon="i-lucide-user"
           color="neutral"
           variant="ghost"
       >
         <span class="hidden sm:inline">Мои покупки</span>
       </UButton>
-      <UButton v-else to="/login" icon="i-lucide-log-in" color="neutral" variant="ghost">
+      <UButton v-else to="/login" icon="i-lucide-log-in" color="neutral" variant="ghost" class="lg:-mr-2.5">
         <span class="hidden sm:inline">Войти</span>
       </UButton>
     </template>

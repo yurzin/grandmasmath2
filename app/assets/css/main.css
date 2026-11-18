@@ -36,6 +36,8 @@
     --ui-primary: var(--ui-color-primary-900);
     --ui-secondary: var(--ui-color-secondary-700);
     --ui-header-height: 4rem;
+    /* Ширина контента: шапка, подвал и широкие страницы выровнены по одной сетке. */
+    --ui-container: 72rem;
 }
 
 .dark {

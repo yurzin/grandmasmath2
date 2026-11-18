@@ -8,6 +8,15 @@ export default defineNuxtConfig({
             casing: 'snake_case'
         }
     },
+    app: {
+        head: {
+            link: [
+                { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+                { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },
+                { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+            ],
+        },
+    },
     css: ['katex/dist/katex.min.css', '~/assets/css/main.css'],
     nitro: {
         // Шаблон PDF-сборника (LaTeX, обложки, шрифт водяного знака) — читается через useStorage('assets:pdf-template').

@@ -23,7 +23,7 @@ useSeoMeta({
   <div>
     <!-- Первый экран -->
     <section class="border-b border-default">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16 grid gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
+      <div class="max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 grid gap-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-center">
         <div>
           <h1 class="font-display text-3xl sm:text-5xl font-semibold uppercase leading-tight text-highlighted text-balance">
             Задачи ЕГЭ с подробными решениями
@@ -45,7 +45,7 @@ useSeoMeta({
     </section>
 
     <!-- Бесплатные варианты -->
-    <section v-if="freeTasks?.length" class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+    <section v-if="freeTasks?.length" class="max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
       <div class="flex flex-wrap items-end justify-between gap-2">
         <div>
           <h2 class="font-display text-2xl sm:text-3xl font-semibold uppercase text-highlighted">Бесплатные варианты</h2>
@@ -72,7 +72,7 @@ useSeoMeta({
 
     <!-- Как это работает: порядок шагов важен, поэтому нумерация -->
     <section class="bg-muted/60 border-y border-default">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+      <div class="max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         <h2 class="font-display text-2xl sm:text-3xl font-semibold uppercase text-highlighted">Как это работает</h2>
         <ol class="mt-6 grid gap-6 sm:grid-cols-3">
           <li v-for="(s, i) in steps" :key="s.title" class="flex gap-4">
@@ -87,7 +87,7 @@ useSeoMeta({
     </section>
 
     <!-- Сборники -->
-    <section class="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+    <section class="max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
       <h2 class="font-display text-2xl sm:text-3xl font-semibold uppercase text-highlighted">Сборники</h2>
       <p class="mt-1 text-sm sm:text-base text-muted">PDF со всеми решениями и доступ к решениям на сайте.</p>
       <div class="mt-5 grid gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -38,12 +38,12 @@ useSeoMeta({ title: 'Задачи ЕГЭ с решениями' })
 </script>
 
 <template>
-  <div class="max-w-7xl mx-auto">
-    <div class="px-3 sm:px-6 pt-5 sm:pt-8">
+  <div class="max-w-(--ui-container) mx-auto">
+    <div class="px-4 sm:px-6 lg:px-8 pt-5 sm:pt-8">
       <h1 class="font-display text-2xl sm:text-3xl font-semibold uppercase text-highlighted">Задачи</h1>
       <p class="mt-1 text-sm sm:text-base text-muted">Все задачи сайта. Бесплатные можно решать и смотреть с решением сразу.</p>
     </div>
-    <div class="px-3 sm:px-6 pt-4 sm:pt-5">
+    <div class="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-5">
       <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2.5 sm:gap-3 rounded-xl border border-default bg-muted p-3 sm:p-4">
         <div class="flex items-center gap-2 text-sm font-medium text-highlighted">
           <UIcon name="i-lucide-sliders-horizontal" class="size-4 text-primary"/>
@@ -94,10 +94,10 @@ useSeoMeta({ title: 'Задачи ЕГЭ с решениями' })
       </div>
     </div>
 
-    <p v-if="pending" class="px-3 sm:px-6 pt-5 sm:pt-6 text-sm sm:text-base text-muted">Загрузка…</p>
-    <p v-else-if="!pins?.length" class="px-3 sm:px-6 pt-5 sm:pt-6 text-sm sm:text-base text-muted">По этим фильтрам задач пока нет.</p>
+    <p v-if="pending" class="px-4 sm:px-6 lg:px-8 pt-5 sm:pt-6 text-sm sm:text-base text-muted">Загрузка…</p>
+    <p v-else-if="!pins?.length" class="px-4 sm:px-6 lg:px-8 pt-5 sm:pt-6 text-sm sm:text-base text-muted">По этим фильтрам задач пока нет.</p>
 
-    <div class="p-3 sm:p-6">
+    <div class="px-4 sm:px-6 lg:px-8 py-3 sm:py-6">
       <div class="columns-2 sm:columns-3 lg:columns-4 xl:columns-5 gap-3 sm:gap-4">
         <NuxtLink
             v-for="pin in pins"

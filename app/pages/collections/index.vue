@@ -5,7 +5,7 @@ useSeoMeta({ title: 'Сборники задач ЕГЭ' })
 </script>
 
 <template>
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+  <div class="max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
     <h1 class="font-display text-2xl sm:text-3xl font-semibold uppercase text-highlighted">Сборники задач</h1>
     <p class="mt-1 text-sm sm:text-base text-muted">Подробные решения задач ЕГЭ по темам. Каждый сборник — PDF и решения на сайте.</p>
 
