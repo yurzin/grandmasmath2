@@ -31,6 +31,11 @@ export function renderMarkdownInline(source: string) {
     return cached(`i:${source}`, () => md.renderInline(source))
 }
 
+/** Рендер без кэша — для предпросмотра в админке (каждая правка уникальна). */
+export function renderMarkdownPreview(source: string, inline = false) {
+    return inline ? md.renderInline(source) : md.render(source)
+}
+
 /** Первый абзац текста — превью для карточек. */
 export function markdownExcerpt(source: string) {
     const first = source.trim().split(/\n\s*\n/)[0] ?? ''

@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-    modules: ['@nuxt/ui', '@nuxthub/core', '@nuxt/eslint'],
+    modules: ['@nuxt/ui', '@nuxthub/core', '@nuxt/eslint', 'nuxt-auth-utils'],
     hub: {
         db: {
             dialect: 'postgresql',

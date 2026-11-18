@@ -16,7 +16,7 @@ export default defineEventHandler(async (event): Promise<CollectionDetail> => {
         .where(and(eq(schema.collections.slug, slug), eq(schema.collections.status, 'published')))
         .limit(1)
 
-    if (!collection) throw createError({ statusCode: 404, statusMessage: 'Сборник не найден' })
+    if (!collection) throw createError({ statusCode: 404, message: 'Сборник не найден' })
 
     const tasks = await db
         .select({

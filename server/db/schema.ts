@@ -1,11 +1,15 @@
 import { pgTable, pgEnum, text, varchar, serial, integer, smallint, boolean, timestamp, unique, primaryKey } from 'drizzle-orm/pg-core'
 
+export const userRoleEnum = pgEnum('user_role', ['user', 'admin'])
+
 export const users = pgTable('users', {
     id: serial().primaryKey(),
     name: text().notNull(),
     email: text().notNull().unique(),
-    password: text().notNull(),
-    avatar: text().notNull(),
+    // scrypt-хеш (server/lib/password.ts); null — вход без пароля (по ссылке на email, этап 4).
+    password: text(),
+    avatar: text(),
+    role: userRoleEnum().notNull().default('user'),
     createdAt: timestamp().notNull().defaultNow(),
 })
 
@@ -38,11 +42,12 @@ export const tasks = pgTable('tasks', {
     answer: varchar({ length: 255 }).notNull(),
     source: varchar({ length: 255 }),
     createdAt: timestamp().notNull().defaultNow(),
+    updatedAt: timestamp().notNull().defaultNow().$onUpdate(() => new Date()),
 })
 
 export const solutions = pgTable('solutions', {
     id: serial().primaryKey(),
-    taskId: integer().notNull().references(() => tasks.id),
+    taskId: integer().notNull().references(() => tasks.id, { onDelete: 'cascade' }),
     body: text().notNull(),
     sortOrder: smallint().notNull().default(1),
 })
@@ -80,7 +85,7 @@ export const tags = pgTable('tags', {
 })
 
 export const taskTags = pgTable('task_tags', {
-    taskId: integer().notNull().references(() => tasks.id),
+    taskId: integer().notNull().references(() => tasks.id, { onDelete: 'cascade' }),
     tagId: integer().notNull().references(() => tags.id),
 }, (t) => [
     primaryKey({ columns: [t.taskId, t.tagId] }),

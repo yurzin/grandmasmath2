@@ -4,7 +4,7 @@ import { buildTaskLabel } from '../../utils/tasks'
 export default defineEventHandler(async (event): Promise<TaskDetail> => {
     const id = Number(getRouterParam(event, 'id'))
     if (!Number.isInteger(id)) {
-        throw createError({ statusCode: 400, statusMessage: 'Некорректный идентификатор' })
+        throw createError({ statusCode: 400, message: 'Некорректный идентификатор' })
     }
 
     const [row] = await db
@@ -26,7 +26,7 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
         .where(eq(schema.tasks.id, id))
         .limit(1)
 
-    if (!row) throw createError({ statusCode: 404, statusMessage: 'Не найдено' })
+    if (!row) throw createError({ statusCode: 404, message: 'Не найдено' })
 
     const [collectionRow] = await db
         .select({

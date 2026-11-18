@@ -1,10 +1,11 @@
 /**
  * Импорт сборника «Решение экономических задач ЕГЭ» из LaTeX-исходника.
  *
- *   npm run db:import-econ -- [путь к all_tasks.tex] [--dry-run]
+ *   npm run db:import-econ -- [путь к all_tasks.tex] [--dry-run] [--overwrite]
  *
- * Повторный запуск безопасен: задачи сопоставляются по позиции в сборнике,
- * обновляются на месте (id не меняются), решения перезаписываются.
+ * Если сборник уже есть в БД, нужен --overwrite: задачи сопоставляются по позиции
+ * в сборнике и обновляются на месте (id не меняются), решения перезаписываются —
+ * правки, сделанные в админке, при этом теряются.
  * --dry-run ничего не пишет в БД, а сохраняет Markdown в .data/import-preview/.
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -76,6 +77,14 @@ const sql = postgres(process.env.DATABASE_URL!)
 const db = drizzle(sql, { casing: 'snake_case' })
 
 async function main() {
+    const [already] = await db.select({ id: collections.id }).from(collections).where(eq(collections.slug, COLLECTION.slug))
+    if (already && !args.includes('--overwrite')) {
+        throw new Error(
+            `Сборник «${COLLECTION.slug}» уже есть в БД. Импорт перезапишет правки, сделанные в админке.\n`
+            + 'Если это и нужно — запустите с флагом --overwrite.',
+        )
+    }
+
     await db.transaction(async (tx) => {
         await tx.insert(taskTypes).values(TASK_TYPE).onConflictDoNothing()
         const [taskType] = await tx.select().from(taskTypes)
@@ -139,7 +148,8 @@ async function main() {
 
 main()
     .catch((err) => {
-        console.error(err)
+        // Ошибки БД — со стеком, свои проверки — только текстом.
+        console.error(err?.code ? err : `\n${err instanceof Error ? err.message : err}`)
         process.exitCode = 1
     })
     .finally(() => sql.end())
