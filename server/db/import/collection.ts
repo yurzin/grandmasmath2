@@ -29,8 +29,8 @@ interface CollectionSource {
     taskTypeNumber: number
     topic: { name: string, slug: string } | null
     difficulty: number
-    /** Сколько первых вариантов открыть бесплатно. */
-    freeCount: number
+    /** Какие варианты открыть бесплатно при первой загрузке; дальше бесплатность меняют в админке. */
+    freeVariants: number[]
     /** Подбирать ключ ответа для «Реши сам» (только когда ответы — числа). */
     answerKeys: boolean
 }
@@ -46,7 +46,7 @@ const SOURCES: Record<string, CollectionSource> = {
         taskTypeNumber: 16,
         topic: { name: 'Финансовая математика', slug: 'financial-math' },
         difficulty: 4,
-        freeCount: 3,
+        freeVariants: [1, 2, 3],
         answerKeys: true,
     },
     params: {
@@ -59,7 +59,8 @@ const SOURCES: Record<string, CollectionSource> = {
         taskTypeNumber: 18,
         topic: null,
         difficulty: 5,
-        freeCount: 3,
+        // Разные методы: модуль по случаям, графический (с рисунком), прямые и гиперболы.
+        freeVariants: [1, 7, 12],
         // Ответы — промежутки и множества; автоподбор ключа для них не работает.
         answerKeys: false,
     },
@@ -181,9 +182,7 @@ async function main() {
                 const reviewNote = t.reviewNote && t.reviewNote !== current?.cleared ? t.reviewNote : null
                 await tx.update(tasks).set({ ...values, reviewNote }).where(eq(tasks.id, taskId))
                 await tx.delete(solutions).where(eq(solutions.taskId, taskId))
-                await tx.update(collectionTasks)
-                    .set({ isFree: t.position <= config.freeCount })
-                    .where(and(eq(collectionTasks.collectionId, collection!.id), eq(collectionTasks.taskId, taskId)))
+                // Бесплатность не трогаем: после первой загрузки ею управляют из админки.
                 updated++
             } else {
                 const [task] = await tx.insert(tasks).values({ ...values, reviewNote: t.reviewNote }).returning({ id: tasks.id })
@@ -192,7 +191,7 @@ async function main() {
                     collectionId: collection!.id,
                     taskId,
                     position: t.position,
-                    isFree: t.position <= config.freeCount,
+                    isFree: config.freeVariants.includes(t.position),
                 })
                 created++
             }
