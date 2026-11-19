@@ -1,75 +1,43 @@
-# Nuxt Minimal Starter
+# Бабушкина математика
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Сайт с подробными решениями задач профильного ЕГЭ по математике: сборники (PDF и решения на сайте), бесплатные варианты, «Реши сам», подписка, оплата через ЮKassa.
 
-## Setup
+Nuxt 4 + Nuxt UI, PostgreSQL (Drizzle, NuxtHub), XeLaTeX для PDF-сборников.
 
-Make sure to install dependencies:
+## Разработка
 
 ```bash
-# npm
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
+cp .env.example .env          # настройки — в комментариях внутри
+docker compose up -d          # PostgreSQL на localhost:5432
+npm run dev                   # http://localhost:3000
 ```
 
-## Development Server
+Администратор: `npm run admin:create -- email@example.com "Имя"` (пароль спросит в терминале), админка — `/admin`.
 
-Start the development server on `http://localhost:3000`:
+## Содержимое
+
+Сборники импортируются из LaTeX-исходников (`all_tasks.tex`) — нужен XeLaTeX и dvisvgm (рисунки TikZ → `public/figures/*.svg`, их нужно коммитить):
 
 ```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
+npm run db:import -- <сборник> --dry-run     # проверка, Markdown в .data/import-preview/
+npm run db:import -- <сборник> [--overwrite]
+npm run pdf:build -- <slug>                  # собрать PDF сборника
 ```
 
-## Production
+Список сборников и их настройки — `SOURCES` в `server/db/import/collection.ts`.
 
-Build the application for production:
+## Деплой
 
-```bash
-# npm
-npm run build
+Подробная инструкция — **[DEPLOY.md](DEPLOY.md)**: сервер, Docker, HTTPS через Caddy, перенос базы, ЮKassa, резервные копии, обновления.
 
-# pnpm
-pnpm build
+Коротко: `docker compose --profile app up -d --build` поднимает базу и сайт (порт 8080 на `127.0.0.1`).
 
-# yarn
-yarn build
+## Полезные команды
 
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+| Команда | Что делает |
+|---|---|
+| `npm run lint` | ESLint |
+| `npm run typecheck` | Проверка типов |
+| `npm run db:generate` | Миграция по изменениям схемы `server/db/schema.ts` |
+| `npm run db:answer-keys` | Подобрать ключи ответов для «Реши сам» |

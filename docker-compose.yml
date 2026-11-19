@@ -11,8 +11,9 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: grandmasmath
+    # Только с этой машины: на сервере база не должна быть видна из интернета.
     ports:
-      - '5432:5432'
+      - '127.0.0.1:5432:5432'
     volumes:
       - grandmasmath-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -41,8 +42,9 @@ services:
       NUXT_YOOKASSA_RECEIPT: ${NUXT_YOOKASSA_RECEIPT:-}
       NUXT_YOOKASSA_VAT_CODE: ${NUXT_YOOKASSA_VAT_CODE:-1}
       NUXT_YOOKASSA_PAYMENT_SUBJECT: ${NUXT_YOOKASSA_PAYMENT_SUBJECT:-commodity}
+    # Только с этой машины: снаружи сайт открывается через обратный прокси с HTTPS (см. DEPLOY.md).
     ports:
-      - '${APP_PORT:-8080}:3000'
+      - '127.0.0.1:${APP_PORT:-8080}:3000'
     volumes:
       - grandmasmath-app-data:/app/.data
 
