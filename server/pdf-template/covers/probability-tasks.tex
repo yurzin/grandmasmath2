@@ -1,0 +1,61 @@
+% Титульный лист сборника «Решение задач по теории вероятностей ЕГЭ» (иллюстрация: таблица исходов двух бросков и игральная кость).
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay]
+  % фон
+  \shade[top color=titleblue!95!black, bottom color=accent!85!black]
+    (current page.south west) rectangle (current page.north east);
+  % тонкая сетка
+  \begin{scope}[opacity=0.07]
+    \foreach \x in {0,0.8,...,21.6} \draw[white,line width=0.3pt]
+      ($(current page.south west)+(\x,0)$) -- ++(0,29.7);
+    \foreach \y in {0,0.8,...,30} \draw[white,line width=0.3pt]
+      ($(current page.south west)+(0,\y)$) -- ++(21,0);
+  \end{scope}
+  % верхняя плашка
+  \node[anchor=north,text=white!80,font=\small\addfontfeatures{LetterSpace=12}]
+    at ($(current page.north)+(0,-2.2)$) {ЕДИНЫЙ ГОСУДАРСТВЕННЫЙ ЭКЗАМЕН · МАТЕМАТИКА · ПРОФИЛЬ};
+  \draw[white!60,line width=0.6pt] ($(current page.north)+(-4,-2.9)$) -- ++(8,0);
+
+  % заголовок
+  \node[anchor=north,text=white,align=center,font=\fontsize{34}{40}\selectfont\bfseries]
+    at ($(current page.north)+(0,-4.0)$) {Решение задач\\по теории\\вероятностей ЕГЭ};
+  \node[anchor=north,text=white!85,align=center,font=\large]
+    at ($(current page.north)+(0,-9.3)$) {Задача № 5 · \TaskCountText\ с подробными решениями};
+
+  % ===== иллюстрация: таблица исходов двух бросков и игральная кость =====
+  \begin{scope}[shift={($(current page.center)+(-5.6,-6.2)$)}]
+    \fill[white,opacity=0.10,rounded corners=10pt] (-0.8,-0.9) rectangle (12.0,8.4);
+    \draw[white,opacity=0.35,rounded corners=10pt,line width=0.8pt] (-0.8,-0.9) rectangle (12.0,8.4);
+    % сетка 6 × 6
+    \foreach \i in {0,...,6} {
+      \draw[white,opacity=0.55,line width=0.8pt] (0,\i) -- (6,\i);
+      \draw[white,opacity=0.55,line width=0.8pt] (\i,0) -- (\i,6);
+    }
+    \foreach \i in {1,...,6} {
+      \node[white,font=\small] at (\i-0.5,6.4) {\i};
+      \node[white,font=\small] at (-0.4,6.5-\i) {\i};
+    }
+    % клетки с суммой больше 7
+    \foreach \x in {1,...,6} \foreach \y in {1,...,6} {
+      \pgfmathtruncatemacro{\s}{\x+\y}
+      \ifnum\s>7 \node[yellow!80!orange,font=\large\bfseries] at (\y-0.5,6.5-\x) {+}; \fi
+    }
+    % игральная кость
+    \begin{scope}[shift={(7.6,3.2)}]
+      \fill[white,rounded corners=8pt] (0,0) rectangle (3,3);
+      \foreach \p in {(0.7,0.7),(0.7,1.5),(0.7,2.3),(2.3,0.7),(2.3,1.5),(2.3,2.3)}
+        \fill[titleblue] \p circle (0.24);
+    \end{scope}
+    \node[text=white,font=\Large,anchor=west] at (7.3,1.4) {$P = \dfrac{m}{n}$};
+    \node[text=white,font=\large,anchor=west] at (7.3,7.35) {$\dfrac{15}{36}\approx 0{,}42$};
+  \end{scope}
+
+  % подвал
+  \node[anchor=south,text=white!85,align=center,font=\normalsize]
+    at ($(current page.south)+(0,3.0)$) {Кости и монеты · полная вероятность · независимые события · сочетания};
+  \draw[white!60,line width=0.6pt] ($(current page.south)+(-4,2.6)$) -- ++(8,0);
+  \node[anchor=south,text=white!70,font=\small\addfontfeatures{LetterSpace=10}]
+    at ($(current page.south)+(0,1.7)$) {\CollectionYear};
+\end{tikzpicture}
+\end{titlepage}

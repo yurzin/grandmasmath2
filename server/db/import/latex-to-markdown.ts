@@ -223,7 +223,10 @@ function convertTabular(body: string, warnings: string[]) {
         .map(r => splitTop(r, '&').map(c => c.trim()))
 
     const cols = Math.max(...rows.map(r => r.length))
-    const isHeader = rows.length > 1 && rows[0]!.every(c => /^\\textbf\{/.test(c))
+    // Шапка — первая строка, где все непустые клетки жирные (угловая клетка может быть пустой).
+    const isHeader = rows.length > 1
+        && rows[0]!.some(c => c !== '')
+        && rows[0]!.every(c => c === '' || /^\\textbf\{/.test(c))
 
     const cell = (raw: string, col: number) => {
         let md: string
