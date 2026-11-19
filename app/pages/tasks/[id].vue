@@ -57,13 +57,18 @@ async function openSolution() {
 }
 
 // Водяной знак с email покупателя поверх решения (короткий доступ).
+// Заметен на фото и скриншоте, но не мешает читать: почта и момент открытия, плитка по диагонали.
+const openedAt = ref<Date | null>(null)
+watch(showSolution, (shown) => { if (shown) openedAt.value = new Date() })
+const stampFormat = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
 const watermarkStyle = computed(() => {
   const email = task.value?.pass?.watermark
   if (!email) return undefined
-  const safe = email.replace(/[<>&"']/g, '')
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="160">`
-    + `<text x="160" y="90" text-anchor="middle" transform="rotate(-20 160 80)" `
-    + `font-family="sans-serif" font-size="14" fill="rgb(160,180,255)" fill-opacity="0.09">${safe}</text></svg>`
+  const stamp = openedAt.value ? ` · ${stampFormat.format(openedAt.value).replace(',', '')}` : ''
+  const safe = `${email}${stamp}`.replace(/[<>&"']/g, '')
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="170">`
+    + `<text x="180" y="95" text-anchor="middle" transform="rotate(-20 180 85)" `
+    + `font-family="sans-serif" font-size="16" font-weight="600" fill="rgb(170,190,255)" fill-opacity="0.2">${safe}</text></svg>`
   return { backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")` }
 })
 
