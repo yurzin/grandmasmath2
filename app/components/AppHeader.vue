@@ -36,7 +36,6 @@ const links = computed<NavigationMenuItem[]>(() => [{
     <UNavigationMenu :items="links" variant="link"/>
 
     <template #right>
-      <UColorModeButton color="neutral" variant="ghost"/>
       <UButton
           v-if="loggedIn"
           to="/account"

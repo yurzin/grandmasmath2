@@ -85,7 +85,7 @@ useSeoMeta({
       </div>
     </div>
 
-    <div v-if="task" class="rounded-xl border border-default bg-default overflow-hidden">
+    <div v-if="task" class="rounded-xl border border-default card-surface overflow-hidden">
       <img
           v-if="task.imageUrl"
           :src="task.imageUrl"

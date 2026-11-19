@@ -29,7 +29,7 @@ onBeforeUnmount(() => clearTimeout(timer))
 
 <template>
   <div class="max-w-lg mx-auto p-4 sm:p-10">
-    <div class="rounded-xl border border-default bg-default p-6 text-center space-y-3">
+    <div class="rounded-xl border border-default card-surface p-6 text-center space-y-3">
       <template v-if="error || !purchase">
         <UIcon name="i-lucide-search-x" class="size-10 text-dimmed"/>
         <p class="text-muted">Покупка не найдена</p>

@@ -1,9 +1,9 @@
 export default defineAppConfig({
     ui: {
         colors: {
-            primary: 'ink',
+            primary: 'azure',
             secondary: 'sage',
-            neutral: 'slate'
+            neutral: 'navy'
         },
         main: {
             base: 'min-h-[calc(100vh-var(--ui-header-height))]'

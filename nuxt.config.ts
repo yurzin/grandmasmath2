@@ -17,8 +17,11 @@ export default defineNuxtConfig({
     $production: {
         hub: { db: { dialect: 'postgresql', connection: { url: '' } } },
     },
+    // Сайт только в тёмной теме: модуль переключения отключён, класс .dark стоит на <html> всегда.
+    ui: { colorMode: false },
     app: {
         head: {
+            htmlAttrs: { lang: 'ru', class: 'dark' },
             link: [
                 { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
                 { rel: 'icon', href: '/favicon.ico', sizes: '32x32' },

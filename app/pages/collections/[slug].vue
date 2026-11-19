@@ -62,7 +62,7 @@ async function buy() {
       </p>
 
       <!-- Покупка -->
-      <div class="mt-5 rounded-xl border border-default bg-muted/50 p-4 sm:p-5">
+      <div class="mt-5 rounded-xl border border-default card-surface-alt p-4 sm:p-5">
         <div v-if="hasAccess" class="flex flex-col sm:flex-row sm:items-center gap-3">
           <UIcon name="i-lucide-circle-check" class="size-6 text-success flex-none"/>
           <p class="flex-1 text-sm sm:text-base text-muted">
@@ -109,7 +109,7 @@ async function buy() {
         <li v-for="t in collection.tasks" :key="t.id">
           <NuxtLink
               :to="`/tasks/${t.id}`"
-              class="group flex h-full items-center gap-3 rounded-lg border border-default bg-default px-3 py-2.5 transition-colors hover:border-accented hover:bg-elevated/60"
+              class="group flex h-full items-center gap-3 rounded-lg border border-default card-surface px-3 py-2.5 transition-colors hover:border-accented hover:bg-elevated/60"
               :class="t.solved ? 'border-success/40' : ''"
           >
             <span

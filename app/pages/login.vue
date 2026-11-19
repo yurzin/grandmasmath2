@@ -47,7 +47,7 @@ async function verify() {
 
 <template>
   <div class="flex justify-center p-4 sm:p-10">
-    <div class="w-full max-w-sm rounded-xl border border-default bg-default p-5 sm:p-6 shadow-sm">
+    <div class="w-full max-w-sm rounded-xl border border-default card-surface p-5 sm:p-6 shadow-sm">
       <h1 class="text-lg font-semibold text-highlighted">Вход</h1>
 
       <form v-if="step === 'email'" class="mt-4 space-y-4" @submit.prevent="sendCode">

@@ -25,7 +25,7 @@ async function finish(state: 'succeeded' | 'canceled') {
 
 <template>
   <div class="max-w-md mx-auto p-4 sm:p-10">
-    <div class="rounded-xl border-2 border-dashed border-warning bg-default p-6 space-y-4 text-center">
+    <div class="rounded-xl border-2 border-dashed border-warning card-surface p-6 space-y-4 text-center">
       <UBadge color="warning" variant="subtle">Тестовый режим</UBadge>
       <h1 class="text-lg font-semibold text-highlighted">Имитация оплаты</h1>
       <p class="text-sm text-muted">

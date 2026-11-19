@@ -60,7 +60,7 @@ async function subscribe(planId: number) {
       <div
           v-for="p in info.plans"
           :key="p.id"
-          class="flex flex-col rounded-xl border border-default bg-default p-5"
+          class="flex flex-col rounded-xl border border-default card-surface p-5"
       >
         <p class="text-sm text-muted">{{ plural(p.months, ['месяц', 'месяца', 'месяцев']) }}</p>
         <p class="mt-1 font-display text-4xl font-semibold text-highlighted">{{ p.price.toLocaleString('ru-RU') }} ₽</p>

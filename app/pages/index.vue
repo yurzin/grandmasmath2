@@ -58,7 +58,7 @@ useSeoMeta({
             v-for="t in freeTasks"
             :key="t.id"
             :to="`/tasks/${t.id}`"
-            class="group flex flex-col rounded-xl border border-default bg-muted/50 p-4 transition-all hover:-translate-y-0.5 hover:border-accented hover:bg-default hover:shadow-md"
+            class="group flex flex-col rounded-xl border border-default card-surface-alt p-4 transition-all hover:-translate-y-0.5 hover:border-accented hover:card-surface hover:shadow-md"
         >
           <span class="text-xs text-dimmed">{{ t.label }}</span>
           <span v-if="t.title !== t.label" class="mt-1 font-semibold text-highlighted group-hover:text-primary transition-colors">{{ t.title }}</span>
@@ -71,7 +71,7 @@ useSeoMeta({
     </section>
 
     <!-- Как это работает: порядок шагов важен, поэтому нумерация -->
-    <section class="bg-muted/60 border-y border-default">
+    <section class="band-surface border-y border-default">
       <div class="max-w-(--ui-container) mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14">
         <h2 class="font-display text-2xl sm:text-3xl font-semibold uppercase text-highlighted">Как это работает</h2>
         <ol class="mt-6 grid gap-6 sm:grid-cols-3">

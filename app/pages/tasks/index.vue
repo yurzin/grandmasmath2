@@ -35,7 +35,7 @@ useSeoMeta({ title: 'Задачи ЕГЭ с решениями' })
       <p class="mt-1 text-sm sm:text-base text-muted">Все задачи сайта. Бесплатные можно решать и смотреть с решением сразу.</p>
     </div>
     <div class="px-4 sm:px-6 lg:px-8 pt-4 sm:pt-5">
-      <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2.5 sm:gap-3 rounded-xl border border-default bg-muted p-3 sm:p-4">
+      <div class="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2.5 sm:gap-3 rounded-xl border border-default card-surface-alt p-3 sm:p-4">
         <div class="flex items-center gap-2 text-sm font-medium text-highlighted">
           <UIcon name="i-lucide-sliders-horizontal" class="size-4 text-primary"/>
           Фильтры
@@ -76,7 +76,7 @@ useSeoMeta({ title: 'Задачи ЕГЭ с решениями' })
             v-for="pin in pins"
             :key="pin.id"
             :to="`/tasks/${pin.id}`"
-            class="group block mb-3 sm:mb-4 break-inside-avoid rounded-xl overflow-hidden border border-default bg-default transition-all hover:-translate-y-0.5 hover:border-accented hover:shadow-md"
+            class="group block mb-3 sm:mb-4 break-inside-avoid rounded-xl overflow-hidden border border-default card-surface transition-all hover:-translate-y-0.5 hover:border-accented hover:shadow-md"
         >
           <div class="p-2.5 sm:p-3">
             <span class="block text-[11px] sm:text-xs text-dimmed">{{ pin.label }}</span>

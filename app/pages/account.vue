@@ -27,7 +27,7 @@ const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
 
     <div
         v-if="subscription?.activeUntil"
-        class="mt-5 flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-success/40 bg-default p-4"
+        class="mt-5 flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-success/40 card-surface p-4"
     >
       <UIcon name="i-lucide-crown" class="size-6 text-success flex-none"/>
       <p class="flex-1 text-sm sm:text-base">
@@ -38,7 +38,7 @@ const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
       <UButton to="/subscription" color="neutral" variant="outline">Продлить</UButton>
     </div>
 
-    <div v-if="!purchases?.length" class="mt-6 rounded-xl border border-default bg-default p-6 text-center">
+    <div v-if="!purchases?.length" class="mt-6 rounded-xl border border-default card-surface p-6 text-center">
       <p class="text-muted">Покупок пока нет.</p>
       <UButton to="/collections" class="mt-3" icon="i-lucide-book-open">Смотреть сборники</UButton>
     </div>
@@ -47,7 +47,7 @@ const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
       <li
           v-for="p in purchases"
           :key="p.id"
-          class="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-default bg-default p-4"
+          class="flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-default card-surface p-4"
       >
         <div class="flex-1 min-w-0">
           <NuxtLink v-if="p.collection" :to="`/collections/${p.collection.slug}`" class="font-medium text-highlighted hover:text-primary">

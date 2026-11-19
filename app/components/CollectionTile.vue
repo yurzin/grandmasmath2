@@ -5,7 +5,7 @@ defineProps<{ collection: CollectionCard }>()
 <template>
   <NuxtLink
       :to="`/collections/${collection.slug}`"
-      class="group flex flex-col rounded-xl border border-default bg-default p-4 sm:p-5 transition-all hover:-translate-y-0.5 hover:border-accented hover:shadow-md"
+      class="group flex flex-col rounded-xl border border-default card-surface p-4 sm:p-5 transition-all hover:-translate-y-0.5 hover:border-accented hover:shadow-md"
   >
     <div class="flex items-start gap-3">
       <span class="flex-none grid place-items-center size-10 rounded-lg bg-secondary/10 text-secondary">
