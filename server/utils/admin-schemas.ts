@@ -40,11 +40,17 @@ export const topicInputSchema = z.object({
     .transform(t => ({ ...t, slug: t.slug || slugify(t.name) }))
     .refine(t => SLUG_RE.test(t.slug), { path: ['slug'], message: 'Только латиница, цифры и дефисы' })
 
+/** Тариф: либо подписка на месяцы, либо короткий доступ на дни (с лимитом решений за сутки). */
 export const planInputSchema = z.object({
-    months: z.number().int().min(1).max(36),
+    months: z.number().int().min(1).max(36).nullable().default(null),
+    days: z.number().int().min(1).max(31).nullable().default(null),
+    dailyLimit: z.number().int().min(1).max(500).nullable().default(null),
     price: z.number().int().min(1),
     active: z.boolean(),
 })
+    .refine(p => (p.months === null) !== (p.days === null), { message: 'Укажите срок: месяцы или дни' })
+    // Лимит бывает только у короткого доступа; у подписки он не применяется.
+    .transform(p => ({ ...p, dailyLimit: p.days === null ? null : p.dailyLimit }))
 
 export const taskTypeInputSchema = z.object({
     number: z.number().int().min(1).max(99),

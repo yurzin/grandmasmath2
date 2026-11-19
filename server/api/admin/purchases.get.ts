@@ -1,6 +1,6 @@
 import { desc, eq } from 'drizzle-orm'
 
-/** Последние покупки (сборники и подписка) — для обзора продаж. */
+/** Последние покупки (сборники, подписка, короткий доступ) — для обзора продаж. */
 export default defineAdminHandler(async (): Promise<AdminPurchase[]> => {
     const rows = await db
         .select({
@@ -10,6 +10,7 @@ export default defineAdminHandler(async (): Promise<AdminPurchase[]> => {
             amount: schema.purchases.amount,
             provider: schema.purchases.provider,
             months: schema.purchases.months,
+            days: schema.purchases.days,
             accessUntil: schema.purchases.accessUntil,
             downloadCount: schema.purchases.downloadCount,
             createdAt: schema.purchases.createdAt,

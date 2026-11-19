@@ -65,20 +65,24 @@ export interface AdminTaskTypeInput {
     name: string
 }
 
+/** Тариф: подписка на months месяцев или короткий доступ на days дней (с лимитом решений за сутки). */
 export interface AdminPlan {
     id: number
-    months: number
+    months: number | null
+    days: number | null
+    dailyLimit: number | null
     price: number
     active: boolean
 }
 
 export interface AdminPurchase {
     id: number
-    kind: 'collection' | 'subscription'
+    kind: 'collection' | 'subscription' | 'pass'
     status: 'pending' | 'succeeded' | 'canceled'
     amount: number
     provider: string
     months: number | null
+    days: number | null
     accessUntil: string | null
     downloadCount: number
     createdAt: string

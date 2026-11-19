@@ -1,5 +1,16 @@
 import type { H3Event } from 'h3'
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, asc, eq, inArray } from 'drizzle-orm'
+
+/** Ответ и решения задачи в HTML — отдаются только тем, кому они открыты. */
+export async function loadSolutionContent(taskId: number, answer: string) {
+    const rows = await db.select({ body: schema.solutions.body }).from(schema.solutions)
+        .where(eq(schema.solutions.taskId, taskId))
+        .orderBy(asc(schema.solutions.sortOrder))
+    return {
+        answerHtml: renderMarkdownInline(answer),
+        solutionsHtml: rows.map(s => renderMarkdown(s.body)),
+    }
+}
 
 /** Сборники, в которые входит задача. */
 export function taskMemberships(taskId: number) {

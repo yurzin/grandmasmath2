@@ -1,4 +1,5 @@
-import { pgTable, pgEnum, text, varchar, serial, integer, smallint, boolean, timestamp, unique, index, primaryKey } from 'drizzle-orm/pg-core'
+import { pgTable, pgEnum, text, varchar, serial, integer, smallint, boolean, timestamp, unique, index, primaryKey, check } from 'drizzle-orm/pg-core'
+import { sql } from 'drizzle-orm'
 
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin'])
 
@@ -115,17 +116,26 @@ export const loginTokens = pgTable('login_tokens', {
 
 // ---------- Покупки: сборники (этап 4) и подписка (этап 5) ----------
 
-/** Тарифы подписки «доступ ко всем сборникам на срок». */
+/**
+ * Тарифы доступа. Задаётся ровно одно из двух:
+ * - months — подписка «все сборники на срок»: решения без ограничений и PDF;
+ * - days — короткий доступ: решения только на сайте (без PDF), не больше dailyLimit новых решений за сутки.
+ */
 export const subscriptionPlans = pgTable('subscription_plans', {
     id: serial().primaryKey(),
-    months: smallint().notNull().unique(),
+    months: smallint().unique(),
+    days: smallint().unique(),
+    /** Для короткого доступа: сколько разных решений можно открыть за скользящие 24 часа. */
+    dailyLimit: smallint(),
     /** Цена в рублях. */
     price: integer().notNull(),
     /** Выключенный тариф не продаётся. */
     active: boolean().notNull().default(false),
-})
+}, t => [
+    check('subscription_plans_period', sql`(${t.months} IS NULL) <> (${t.days} IS NULL)`),
+])
 
-export const purchaseKindEnum = pgEnum('purchase_kind', ['collection', 'subscription'])
+export const purchaseKindEnum = pgEnum('purchase_kind', ['collection', 'subscription', 'pass'])
 export const purchaseStatusEnum = pgEnum('purchase_status', ['pending', 'succeeded', 'canceled'])
 
 export const purchases = pgTable('purchases', {
@@ -145,6 +155,9 @@ export const purchases = pgTable('purchases', {
     downloadCount: integer().notNull().default(0),
     /** Подписка: срок в месяцах; период доступа считается в момент оплаты (продление — с конца текущего). */
     months: smallint(),
+    /** Короткий доступ (kind = 'pass'): срок в днях и лимит решений за сутки — на момент покупки. */
+    days: smallint(),
+    dailyLimit: smallint(),
     accessFrom: timestamp(),
     accessUntil: timestamp(),
     /** Когда отправили напоминание о скором окончании подписки. */
@@ -153,6 +166,16 @@ export const purchases = pgTable('purchases', {
     paidAt: timestamp(),
 }, t => [
     index('idx_purchases_user').on(t.userId),
+])
+
+/** Решения, открытые по короткому доступу, — для лимита за сутки и защиты от выкачивания. */
+export const solutionViews = pgTable('solution_views', {
+    id: serial().primaryKey(),
+    userId: integer().notNull().references(() => users.id, { onDelete: 'cascade' }),
+    taskId: integer().notNull().references(() => tasks.id, { onDelete: 'cascade' }),
+    viewedAt: timestamp().notNull().defaultNow(),
+}, t => [
+    index('idx_solution_views_user_time').on(t.userId, t.viewedAt),
 ])
 
 // ---------- «Реши сам» (этап 5) ----------

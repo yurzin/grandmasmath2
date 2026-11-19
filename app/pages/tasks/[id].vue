@@ -30,11 +30,56 @@ async function check() {
 }
 watch(myAnswer, () => (checkResult.value = null))
 
+// Короткий доступ: решение приходит с сервера только по кнопке и засчитывается в лимит за сутки.
+const revealing = ref(false)
+const revealError = ref('')
+async function openSolution() {
+  const t = task.value
+  if (!t) return
+  if (!t.pass || t.pass.revealed) {
+    showSolution.value = true
+    return
+  }
+  revealing.value = true
+  revealError.value = ''
+  try {
+    const result = await $fetch<TaskRevealResult>(`/api/tasks/${t.id}/reveal`, { method: 'POST' })
+    t.answerHtml = result.answerHtml
+    t.solutionsHtml = result.solutionsHtml
+    t.pass.revealed = true
+    if (result.quota) t.pass.used = result.quota.used
+    showSolution.value = true
+  } catch (e) {
+    revealError.value = errorMessage(e, 'Не удалось открыть решение')
+  } finally {
+    revealing.value = false
+  }
+}
+
+// Водяной знак с email покупателя поверх решения (короткий доступ).
+const watermarkStyle = computed(() => {
+  const email = task.value?.pass?.watermark
+  if (!email) return undefined
+  const safe = email.replace(/[<>&"']/g, '')
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="160">`
+    + `<text x="160" y="90" text-anchor="middle" transform="rotate(-20 160 80)" `
+    + `font-family="sans-serif" font-size="14" fill="rgb(160,180,255)" fill-opacity="0.09">${safe}</text></svg>`
+  return { backgroundImage: `url("data:image/svg+xml;utf8,${encodeURIComponent(svg)}")` }
+})
+
+const timeFormat = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+
+// Варианты для закрытой задачи: короткий доступ (если продаётся) — с возвратом на эту задачу.
+const { data: offers } = useFetch<SubscriptionInfo>('/api/subscriptions', { lazy: true, server: false })
+const cheapestPass = computed(() => offers.value?.passes.reduce<SubscriptionInfo['passes'][number] | null>(
+  (min, p) => (!min || p.price < min.price ? p : min), null) ?? null)
+
 // Переход к соседнему варианту — та же страница, поэтому сбрасываем ответ и раскрытое решение.
 watch(() => route.params.id, () => {
   myAnswer.value = ''
   checkResult.value = null
   checkError.value = ''
+  revealError.value = ''
   showSolution.value = false
 })
 
@@ -119,16 +164,32 @@ useSeoMeta({
             Ответ, подробное решение и проверка своего ответа — в сборнике
             <span v-if="task.collection" class="font-medium text-highlighted">«{{ task.collection.title }}»</span>
             или по <NuxtLink to="/subscription" class="text-primary underline">подписке на все сборники</NuxtLink>.
+            <template v-if="cheapestPass">
+              Нужно только сейчас? Доступ ко всем решениям на сайте —
+              {{ plural(cheapestPass.days, ['день', 'дня', 'дней']) }} за {{ cheapestPass.price }} ₽.
+            </template>
           </p>
-          <UButton
-              v-if="task.collection"
-              :to="`/collections/${task.collection.slug}`"
-              icon="i-lucide-book-open"
-              color="primary"
-              class="sm:flex-none justify-center"
-          >
-            К сборнику
-          </UButton>
+          <div class="flex flex-col sm:flex-none gap-2">
+            <UButton
+                v-if="cheapestPass"
+                :to="{ path: '/subscription', query: { next: route.fullPath } }"
+                icon="i-lucide-timer"
+                color="primary"
+                class="justify-center"
+            >
+              {{ plural(cheapestPass.days, ['день', 'дня', 'дней']) }} — {{ cheapestPass.price }} ₽
+            </UButton>
+            <UButton
+                v-if="task.collection"
+                :to="`/collections/${task.collection.slug}`"
+                icon="i-lucide-book-open"
+                :color="cheapestPass ? 'neutral' : 'primary'"
+                :variant="cheapestPass ? 'outline' : 'solid'"
+                class="justify-center"
+            >
+              К сборнику
+            </UButton>
+          </div>
         </div>
 
         <!-- Реши сам -->
@@ -163,19 +224,27 @@ useSeoMeta({
         </form>
 
         <div v-if="!task.locked" class="mt-5 sm:mt-6">
-          <UButton
-              v-if="!showSolution"
-              icon="i-lucide-eye"
-              color="neutral"
-              variant="outline"
-              block
-              class="sm:w-auto"
-              @click="showSolution = true"
-          >
-            Показать ответ и решение
-          </UButton>
+          <template v-if="!showSolution">
+            <UButton
+                icon="i-lucide-eye"
+                color="neutral"
+                variant="outline"
+                block
+                class="sm:w-auto"
+                :loading="revealing"
+                @click="openSolution"
+            >
+              Показать ответ и решение
+            </UButton>
+            <p v-if="task.pass" class="mt-2 text-xs text-dimmed">
+              Короткий доступ до {{ timeFormat.format(new Date(task.pass.until)) }}<template v-if="task.pass.limit">
+                · за сутки открыто {{ task.pass.used }} из {{ task.pass.limit }} решений</template><template v-if="task.pass.revealed">
+                · это решение уже открыто, повторно — бесплатно</template>.
+            </p>
+            <UAlert v-if="revealError" class="mt-3" color="error" variant="subtle" :title="revealError" icon="i-lucide-circle-alert"/>
+          </template>
 
-          <div v-else class="space-y-5 sm:space-y-6">
+          <div v-else class="space-y-5 sm:space-y-6 rounded-lg" :style="watermarkStyle">
             <section
                 v-for="(solution, index) in task.solutionsHtml"
                 :key="index"

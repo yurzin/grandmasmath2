@@ -31,6 +31,8 @@ export interface TaskDetail {
     bodyHtml: string
     /** Ответ и решения закрыты (платная задача сборника) — answerHtml null, solutionsHtml пуст. */
     locked: boolean
+    /** Задача открыта по короткому доступу; пока revealed = false, ответ и решения не переданы. */
+    pass: TaskPassState | null
     /** «Реши сам»: у задачи есть ключ ответа и она доступна текущему пользователю. */
     checkable: boolean
     /** Текущий пользователь уже решил её верно. */
@@ -45,6 +47,25 @@ export interface TaskDetail {
     collection: TaskCollectionRef | null
 }
 
+export interface TaskPassState {
+    /** Решение уже открыто в эти сутки — ответ и решения переданы. */
+    revealed: boolean
+    /** Разных решений открыто за последние сутки и лимит (null — без лимита). */
+    used: number
+    limit: number | null
+    /** До какого момента действует доступ. */
+    until: string
+    /** Email покупателя для водяного знака поверх решения. */
+    watermark: string
+}
+
+export interface TaskRevealResult {
+    answerHtml: string
+    solutionsHtml: string[]
+    /** Для короткого доступа — сколько решений открыто за сутки после этого. */
+    quota: { used: number, limit: number | null } | null
+}
+
 export interface CollectionCard {
     slug: string
     title: string
@@ -57,15 +78,17 @@ export interface CollectionCard {
 
 export interface PurchaseItem {
     id: number
-    kind: 'collection' | 'subscription'
+    kind: 'collection' | 'subscription' | 'pass'
     status: 'pending' | 'succeeded' | 'canceled'
     amount: number
     createdAt: string
     paidAt: string | null
     /** Для покупки сборника. */
     collection: { slug: string, title: string } | null
-    /** Для подписки: срок и оплаченный период. */
+    /** Для подписки: срок и оплаченный период; для короткого доступа — срок в днях и лимит решений за сутки. */
     months: number | null
+    days: number | null
+    dailyLimit: number | null
     accessFrom: string | null
     accessUntil: string | null
     /** Ссылка, чтобы вернуться к незавершённой оплате. */
@@ -73,9 +96,14 @@ export interface PurchaseItem {
 }
 
 export interface SubscriptionInfo {
+    /** Подписка на месяцы: решения и PDF без ограничений. */
     plans: { id: number, months: number, price: number }[]
+    /** Короткий доступ на дни: решения только на сайте, не больше dailyLimit новых за сутки. */
+    passes: { id: number, days: number, dailyLimit: number | null, price: number }[]
     /** До какого момента у текущего пользователя есть доступ по подписке. */
     activeUntil: string | null
+    /** До какого момента действует короткий доступ (с учётом оплаченных продлений). */
+    passUntil: string | null
 }
 
 export interface CollectionDetail extends Omit<CollectionCard, 'taskCount'> {
@@ -84,6 +112,8 @@ export interface CollectionDetail extends Omit<CollectionCard, 'taskCount'> {
     purchaseId: number | null
     /** У текущего пользователя действует подписка — до этого момента. */
     subscriptionUntil: string | null
+    /** Действует короткий доступ (решения на сайте, без PDF) — до этого момента. */
+    passUntil: string | null
     tasks: {
         id: number
         position: number

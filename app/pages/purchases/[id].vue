@@ -7,6 +7,9 @@ const route = useRoute()
 const { data: purchase, refresh, error } = await useFetch<PurchaseItem>(() => `/api/purchases/${route.params.id}`)
 
 const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
+const dateTimeFormat = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+// Куда вернуться после оплаты (например, на задачу, с которой пришли за доступом).
+const next = computed(() => (isSafeNextPath(route.query.next) ? route.query.next : null))
 const gaveUp = ref(false)
 let timer: ReturnType<typeof setTimeout> | undefined
 let attempts = 0
@@ -45,6 +48,15 @@ onBeforeUnmount(() => clearTimeout(timer))
             <UButton :to="`/collections/${purchase.collection.slug}`" color="neutral" variant="outline">К сборнику</UButton>
           </div>
         </template>
+        <template v-else-if="purchase.kind === 'pass'">
+          <p class="text-sm text-muted">
+            Все решения на сайте открыты
+            <template v-if="purchase.accessUntil">до {{ dateTimeFormat.format(new Date(purchase.accessUntil)) }}</template><template v-if="purchase.dailyLimit">
+              — до {{ purchase.dailyLimit }} новых решений в сутки</template>.
+          </p>
+          <UButton v-if="next" :to="next" icon="i-lucide-arrow-left">Вернуться к задаче</UButton>
+          <UButton v-else to="/collections" icon="i-lucide-book-open">К сборникам</UButton>
+        </template>
         <template v-else>
           <p class="text-sm text-muted">
             Подписка действует
@@ -53,7 +65,9 @@ onBeforeUnmount(() => clearTimeout(timer))
             </template>:
             открыты все сборники, решения и PDF.
           </p>
-          <UButton to="/collections" icon="i-lucide-book-open">К сборникам</UButton>
+          <UButton :to="next ?? '/collections'" :icon="next ? 'i-lucide-arrow-left' : 'i-lucide-book-open'">
+            {{ next ? 'Вернуться к задаче' : 'К сборникам' }}
+          </UButton>
         </template>
       </template>
 
@@ -61,7 +75,7 @@ onBeforeUnmount(() => clearTimeout(timer))
         <UIcon name="i-lucide-circle-x" class="size-12 text-error"/>
         <h1 class="text-lg font-semibold text-highlighted">Оплата не прошла</h1>
         <p class="text-sm text-muted">Деньги не списаны. Можно попробовать ещё раз.</p>
-        <UButton :to="purchase.collection ? `/collections/${purchase.collection.slug}` : '/subscription'">Вернуться</UButton>
+        <UButton :to="next ?? (purchase.collection ? `/collections/${purchase.collection.slug}` : '/subscription')">Вернуться</UButton>
       </template>
 
       <template v-else>

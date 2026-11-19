@@ -32,9 +32,9 @@ export default defineEventHandler(async (event): Promise<CollectionDetail> => {
 
     // Для вошедшего: куплен ли сборник, есть ли подписка, какие задачи уже решены.
     const { user } = await getUserSession(event)
-    if (!user) return { ...collection, tasks: tasks.map(t => ({ ...t, solved: false })), purchaseId: null, subscriptionUntil: null }
+    if (!user) return { ...collection, tasks: tasks.map(t => ({ ...t, solved: false })), purchaseId: null, subscriptionUntil: null, passUntil: null }
 
-    const [[paid], subscription, solved] = await Promise.all([
+    const [[paid], subscription, pass, solved] = await Promise.all([
         db.select({ id: schema.purchases.id }).from(schema.purchases)
             .where(and(
                 eq(schema.purchases.userId, user.id),
@@ -45,6 +45,7 @@ export default defineEventHandler(async (event): Promise<CollectionDetail> => {
             .orderBy(asc(schema.purchases.id))
             .limit(1),
         activeSubscription(user.id),
+        activePass(user.id),
         solvedTaskIds(user.id, tasks.map(t => t.id)),
     ])
 
@@ -53,5 +54,6 @@ export default defineEventHandler(async (event): Promise<CollectionDetail> => {
         tasks: tasks.map(t => ({ ...t, solved: solved.has(t.id) })),
         purchaseId: paid?.id ?? null,
         subscriptionUntil: subscription?.until.toISOString() ?? null,
+        passUntil: pass?.until.toISOString() ?? null,
     }
 })

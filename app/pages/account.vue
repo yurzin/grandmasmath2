@@ -13,6 +13,7 @@ async function logout() {
 }
 
 const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
+const dateTimeFormat = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
 </script>
 
 <template>
@@ -37,6 +38,17 @@ const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
       </p>
       <UButton to="/subscription" color="neutral" variant="outline">Продлить</UButton>
     </div>
+    <div
+        v-else-if="subscription?.passUntil"
+        class="mt-5 flex flex-col sm:flex-row sm:items-center gap-3 rounded-xl border border-success/40 card-surface p-4"
+    >
+      <UIcon name="i-lucide-timer" class="size-6 text-success flex-none"/>
+      <p class="flex-1 text-sm sm:text-base">
+        Все решения на сайте открыты до
+        <span class="font-medium text-highlighted">{{ dateTimeFormat.format(new Date(subscription.passUntil)) }}</span>.
+      </p>
+      <UButton to="/subscription" color="neutral" variant="outline">Продлить</UButton>
+    </div>
 
     <div v-if="!purchases?.length" class="mt-6 rounded-xl border border-default card-surface p-6 text-center">
       <p class="text-muted">Покупок пока нет.</p>
@@ -53,6 +65,9 @@ const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
           <NuxtLink v-if="p.collection" :to="`/collections/${p.collection.slug}`" class="font-medium text-highlighted hover:text-primary">
             {{ p.collection.title }}
           </NuxtLink>
+          <span v-else-if="p.kind === 'pass'" class="font-medium text-highlighted">
+            Доступ ко всем решениям на сайте · {{ plural(p.days ?? 0, ['день', 'дня', 'дней']) }}
+          </span>
           <span v-else class="font-medium text-highlighted">
             Подписка на все сборники · {{ plural(p.months ?? 0, ['месяц', 'месяца', 'месяцев']) }}
           </span>
@@ -61,7 +76,12 @@ const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
             <template v-if="p.paidAt">оплачен {{ dateFormat.format(new Date(p.paidAt)) }}</template>
             <template v-else>ожидает оплаты</template>
             <template v-if="p.accessFrom && p.accessUntil">
-              · период {{ dateFormat.format(new Date(p.accessFrom)) }} — {{ dateFormat.format(new Date(p.accessUntil)) }}
+              <template v-if="p.kind === 'pass'">
+                · {{ dateTimeFormat.format(new Date(p.accessFrom)) }} — {{ dateTimeFormat.format(new Date(p.accessUntil)) }}
+              </template>
+              <template v-else>
+                · период {{ dateFormat.format(new Date(p.accessFrom)) }} — {{ dateFormat.format(new Date(p.accessUntil)) }}
+              </template>
             </template>
           </p>
         </div>

@@ -82,7 +82,10 @@ function mockProvider(): PaymentProvider {
         async create(input) {
             const paymentId = `mock-${input.purchaseId}-${randomUUID().slice(0, 8)}`
             mockPayments.set(paymentId, 'pending')
-            return { paymentId, confirmationUrl: `/purchases/mock-pay?payment=${paymentId}&purchase=${input.purchaseId}` }
+            // Как ЮKassa: после «оплаты» вернуть на returnUrl (вместе с ?next=…).
+            const back = new URL(input.returnUrl)
+            const query = new URLSearchParams({ payment: paymentId, purchase: String(input.purchaseId), back: back.pathname + back.search })
+            return { paymentId, confirmationUrl: `/purchases/mock-pay?${query}` }
         },
         async fetch(paymentId) {
             return { state: mockPayments.get(paymentId) ?? 'canceled', amount: null }
@@ -130,21 +133,25 @@ export async function syncPurchase(purchase: typeof schema.purchases.$inferSelec
     return await db.transaction(async (tx) => {
         const now = new Date()
         let period: { accessFrom: Date, accessUntil: Date } | null = null
-        if (purchase.kind === 'subscription') {
+        if (purchase.kind === 'subscription' || purchase.kind === 'pass') {
             // Блокируем строку пользователя: два одновременных продления (даже самое первое)
             // посчитают период по очереди и не лягут на одни и те же даты.
+            // Подписка и короткий доступ продлеваются каждый своей цепочкой.
             await tx.select({ id: schema.users.id }).from(schema.users)
                 .where(eq(schema.users.id, purchase.userId)).for('update')
             const rows = await tx.select({ until: schema.purchases.accessUntil }).from(schema.purchases)
                 .where(and(
                     eq(schema.purchases.userId, purchase.userId),
-                    eq(schema.purchases.kind, 'subscription'),
+                    eq(schema.purchases.kind, purchase.kind),
                     eq(schema.purchases.status, 'succeeded'),
                     gt(schema.purchases.accessUntil, now),
                 ))
             const lastUntil = rows.reduce<Date | null>((max, r) => (r.until && (!max || r.until > max) ? r.until : max), null)
             const accessFrom = lastUntil ?? now
-            period = { accessFrom, accessUntil: addMonths(accessFrom, purchase.months ?? 1) }
+            const accessUntil = purchase.kind === 'pass'
+                ? new Date(accessFrom.getTime() + (purchase.days ?? 1) * 24 * 60 * 60 * 1000)
+                : addMonths(accessFrom, purchase.months ?? 1)
+            period = { accessFrom, accessUntil }
         }
         const [updated] = await tx.update(schema.purchases)
             .set({ status: 'succeeded', paidAt: now, ...period })

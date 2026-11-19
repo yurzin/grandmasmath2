@@ -30,17 +30,20 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
     const memberships = await taskMemberships(id)
     const collectionRow = memberships.find(m => m.status === 'published') ?? memberships[0]
 
-    // Платные ответ и решения не покидают сервер.
-    const locked = !(await canViewSolution(event, memberships))
+    // Платные ответ и решения не покидают сервер. По короткому доступу — тоже, пока решение не открыто кнопкой
+    // (POST /api/tasks/:id/reveal): иначе каждое открытие страницы списывало бы лимит.
+    const access = await solutionAccess(event, memberships)
+    const locked = access.kind === 'locked'
+    let pass: TaskPassState | null = null
+    if (access.kind === 'pass') {
+        const [revealed, quota] = await Promise.all([viewedRecently(access.userId, id), passQuota(access.userId, access.dailyLimit)])
+        pass = { revealed, ...quota, until: access.until.toISOString(), watermark: access.email }
+    }
+    const showContent = access.kind === 'open' || pass?.revealed === true
+
     const { user } = await getUserSession(event)
     const solved = user && !locked ? (await solvedTaskIds(user.id, [id])).has(id) : false
-    const solutionRows = locked
-        ? []
-        : await db
-            .select({ body: schema.solutions.body })
-            .from(schema.solutions)
-            .where(eq(schema.solutions.taskId, id))
-            .orderBy(asc(schema.solutions.sortOrder))
+    const content = showContent ? await loadSolutionContent(id, row.answer) : null
 
     const label = buildTaskLabel(row.taskTypeNumber, row.examLevel, row.taskTypeName)
 
@@ -50,10 +53,11 @@ export default defineEventHandler(async (event): Promise<TaskDetail> => {
         label,
         bodyHtml: renderMarkdown(row.body),
         locked,
+        pass,
         checkable: !locked && Boolean(row.answerKey),
         solved,
-        answerHtml: locked ? null : renderMarkdownInline(row.answer),
-        solutionsHtml: solutionRows.map(s => renderMarkdown(s.body)),
+        answerHtml: content?.answerHtml ?? null,
+        solutionsHtml: content?.solutionsHtml ?? [],
         taskNumber: row.taskTypeNumber,
         taskType: row.taskTypeName,
         examLevel: row.examLevel,

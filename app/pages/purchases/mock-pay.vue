@@ -14,7 +14,8 @@ async function finish(state: 'succeeded' | 'canceled') {
   loading.value = true
   try {
     await $fetch('/api/purchases/mock-pay', { method: 'POST', body: { paymentId, state } })
-    await navigateTo(`/purchases/${purchaseId}`)
+    const back = route.query.back
+    await navigateTo(isSafeNextPath(back) ? back : `/purchases/${purchaseId}`)
   } catch (e) {
     error.value = errorMessage(e, 'Ошибка тестовой оплаты')
   } finally {

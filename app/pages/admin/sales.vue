@@ -7,15 +7,26 @@ const { data: plans, refresh: refreshPlans } = await useFetch<AdminPlan[]>('/api
 const { data: purchases } = await useFetch<AdminPurchase[]>('/api/admin/purchases')
 
 // Правки тарифов — локальная копия, сохраняется кнопкой в строке.
-const drafts = ref<Record<number, { price: number, active: boolean }>>({})
+type PlanDraft = { price: number, active: boolean, dailyLimit: number | null }
+const drafts = ref<Record<number, PlanDraft>>({})
 watch(plans, (list) => {
-  drafts.value = Object.fromEntries((list ?? []).map(p => [p.id, { price: p.price, active: p.active }]))
+  drafts.value = Object.fromEntries((list ?? []).map(p => [p.id, { price: p.price, active: p.active, dailyLimit: p.dailyLimit }]))
 }, { immediate: true })
-const changed = (p: AdminPlan) => drafts.value[p.id]?.price !== p.price || drafts.value[p.id]?.active !== p.active
+const changed = (p: AdminPlan) => {
+  const d = drafts.value[p.id]
+  return d?.price !== p.price || d?.active !== p.active || (p.days !== null && (d?.dailyLimit || null) !== p.dailyLimit)
+}
+const planTerm = (p: { months: number | null, days: number | null }) => p.days !== null
+  ? plural(p.days, ['день', 'дня', 'дней'])
+  : plural(p.months ?? 0, ['месяц', 'месяца', 'месяцев'])
 
 async function savePlan(p: AdminPlan) {
+  const d = drafts.value[p.id]!
   try {
-    await $fetch(`/api/admin/subscription-plans/${p.id}`, { method: 'PUT', body: { months: p.months, ...drafts.value[p.id] } })
+    await $fetch(`/api/admin/subscription-plans/${p.id}`, {
+      method: 'PUT',
+      body: { months: p.months, days: p.days, price: d.price, active: d.active, dailyLimit: d.dailyLimit || null },
+    })
     toast.add({ title: 'Тариф сохранён', color: 'success', icon: 'i-lucide-check' })
     await refreshPlans()
   } catch (e) {
@@ -23,10 +34,14 @@ async function savePlan(p: AdminPlan) {
   }
 }
 
-const newPlan = reactive({ months: 6, price: 1490 })
+const unitItems = [{ label: 'месяцев (подписка)', value: 'months' }, { label: 'дней (короткий доступ)', value: 'days' }]
+const newPlan = reactive({ unit: 'months' as 'months' | 'days', amount: 6, price: 1490, dailyLimit: 30 })
 async function addPlan() {
+  const body = newPlan.unit === 'days'
+    ? { days: newPlan.amount, dailyLimit: newPlan.dailyLimit || null, price: newPlan.price, active: false }
+    : { months: newPlan.amount, price: newPlan.price, active: false }
   try {
-    await $fetch('/api/admin/subscription-plans', { method: 'POST', body: { ...newPlan, active: false } })
+    await $fetch('/api/admin/subscription-plans', { method: 'POST', body })
     toast.add({ title: 'Тариф добавлен (выключен)', color: 'success' })
     await refreshPlans()
   } catch (e) {
@@ -73,13 +88,18 @@ const statusBadge: Record<AdminPurchase['status'], { label: string, color: 'succ
         </div>
 
         <section>
-          <h2 class="mb-2 font-medium text-highlighted">Тарифы подписки «все сборники»</h2>
-          <p class="mb-2 text-sm text-muted">Выключенный тариф не показывается на сайте. Новая цена действует только для новых оплат.</p>
+          <h2 class="mb-2 font-medium text-highlighted">Тарифы доступа</h2>
+          <p class="mb-2 text-sm text-muted">
+            <b>Подписка</b> (месяцы) — все решения и PDF без ограничений. <b>Короткий доступ</b> (дни) — решения только на сайте,
+            без PDF, не больше указанного числа новых решений за сутки (пусто — без лимита).
+            Выключенный тариф не показывается на сайте. Новая цена и лимит действуют только для новых оплат.
+          </p>
           <div class="overflow-x-auto rounded-lg border border-default">
             <table class="w-full text-sm">
               <thead class="bg-muted text-left text-muted">
                 <tr>
                   <th class="px-3 py-2">Срок</th>
+                  <th class="px-3 py-2 w-36">Решений в сутки</th>
                   <th class="px-3 py-2 w-40">Цена, ₽</th>
                   <th class="px-3 py-2 w-36">Продаётся</th>
                   <th class="w-32"/>
@@ -87,7 +107,22 @@ const statusBadge: Record<AdminPurchase['status'], { label: string, color: 'succ
               </thead>
               <tbody class="divide-y divide-default">
                 <tr v-for="p in plans" :key="p.id">
-                  <td class="px-3 py-2 text-highlighted">{{ plural(p.months, ['месяц', 'месяца', 'месяцев']) }}</td>
+                  <td class="px-3 py-2 text-highlighted">
+                    {{ planTerm(p) }}
+                    <span class="text-xs text-dimmed">· {{ p.days !== null ? 'короткий доступ' : 'подписка' }}</span>
+                  </td>
+                  <td class="px-3 py-1.5">
+                    <UInput
+                        v-if="p.days !== null && drafts[p.id]"
+                        v-model.number="drafts[p.id]!.dailyLimit"
+                        type="number"
+                        min="1"
+                        size="sm"
+                        class="w-24"
+                        placeholder="без лимита"
+                    />
+                    <span v-else class="text-dimmed">—</span>
+                  </td>
                   <td class="px-3 py-1.5">
                     <UInput v-if="drafts[p.id]" v-model.number="drafts[p.id]!.price" type="number" min="1" size="sm" class="w-28"/>
                   </td>
@@ -102,8 +137,14 @@ const statusBadge: Record<AdminPurchase['status'], { label: string, color: 'succ
             </table>
           </div>
           <form class="mt-2 flex flex-wrap items-end gap-2" @submit.prevent="addPlan">
-            <UFormField label="Новый тариф, месяцев">
-              <UInput v-model.number="newPlan.months" type="number" min="1" max="36" size="sm" class="w-28"/>
+            <UFormField label="Новый тариф, срок">
+              <UInput v-model.number="newPlan.amount" type="number" min="1" :max="newPlan.unit === 'days' ? 31 : 36" size="sm" class="w-20"/>
+            </UFormField>
+            <UFormField label="Единица">
+              <USelect v-model="newPlan.unit" :items="unitItems" size="sm" class="w-56"/>
+            </UFormField>
+            <UFormField v-if="newPlan.unit === 'days'" label="Решений в сутки">
+              <UInput v-model.number="newPlan.dailyLimit" type="number" min="1" size="sm" class="w-24" placeholder="без лимита"/>
             </UFormField>
             <UFormField label="Цена, ₽">
               <UInput v-model.number="newPlan.price" type="number" min="1" size="sm" class="w-28"/>
@@ -134,6 +175,10 @@ const statusBadge: Record<AdminPurchase['status'], { label: string, color: 'succ
                   <td class="px-3 py-2">
                     <template v-if="p.kind === 'subscription'">
                       Подписка, {{ plural(p.months ?? 0, ['месяц', 'месяца', 'месяцев']) }}
+                      <span v-if="p.accessUntil" class="text-xs text-dimmed">до {{ shortDate.format(new Date(p.accessUntil)) }}</span>
+                    </template>
+                    <template v-else-if="p.kind === 'pass'">
+                      Короткий доступ, {{ plural(p.days ?? 0, ['день', 'дня', 'дней']) }}
                       <span v-if="p.accessUntil" class="text-xs text-dimmed">до {{ shortDate.format(new Date(p.accessUntil)) }}</span>
                     </template>
                     <template v-else>{{ p.collectionTitle }}</template>

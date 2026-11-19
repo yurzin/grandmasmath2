@@ -50,6 +50,8 @@ export function toPurchaseItem(p: PurchaseRow, collection: { slug: string, title
         paidAt: p.paidAt?.toISOString() ?? null,
         collection,
         months: p.months,
+        days: p.days,
+        dailyLimit: p.dailyLimit,
         accessFrom: p.accessFrom?.toISOString() ?? null,
         accessUntil: p.accessUntil?.toISOString() ?? null,
         confirmationUrl: p.status === 'pending' ? p.confirmationUrl : null,
@@ -64,16 +66,19 @@ export async function startPayment(
     values: Omit<typeof schema.purchases.$inferInsert, 'provider' | 'status'>,
     description: string,
     customerEmail: string,
+    /** Куда вернуть после оплаты (путь на сайте, например страница задачи). */
+    next?: string,
 ) {
     const provider = paymentProvider()
     const [purchase] = await db.insert(schema.purchases).values({ ...values, provider: provider.name }).returning()
     const { siteUrl } = useRuntimeConfig()
+    const returnPath = `/purchases/${purchase!.id}${next && isSafeNextPath(next) ? `?next=${encodeURIComponent(next)}` : ''}`
     try {
         const payment = await provider.create({
             purchaseId: purchase!.id,
             amount: values.amount,
             description,
-            returnUrl: `${siteUrl}/purchases/${purchase!.id}`,
+            returnUrl: `${siteUrl}${returnPath}`,
             customerEmail,
         })
         await db.update(schema.purchases)

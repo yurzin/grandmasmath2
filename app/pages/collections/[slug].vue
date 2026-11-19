@@ -12,6 +12,9 @@ useSeoMeta({
 const purchased = computed(() => Boolean(collection.value?.purchaseId))
 const subscribed = computed(() => Boolean(collection.value?.subscriptionUntil))
 const hasAccess = computed(() => purchased.value || subscribed.value)
+// Короткий доступ открывает решения на сайте, но не PDF — сборник по-прежнему можно купить.
+const passActive = computed(() => Boolean(collection.value?.passUntil))
+const dateTimeFormat = new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
 const solvedCount = computed(() => collection.value?.tasks.filter(t => t.solved).length ?? 0)
 const dateFormat = new Intl.DateTimeFormat('ru-RU', { dateStyle: 'long' })
 const agree = ref(false)
@@ -60,6 +63,16 @@ async function buy() {
         {{ plural(collection.tasks.length, ['задача', 'задачи', 'задач']) }}
         <template v-if="solvedCount"> · решено {{ solvedCount }}</template>
       </p>
+
+      <UAlert
+          v-if="passActive && !hasAccess"
+          class="mt-5"
+          color="success"
+          variant="subtle"
+          icon="i-lucide-timer"
+          :title="`Решения открыты по короткому доступу до ${dateTimeFormat.format(new Date(collection.passUntil!))}`"
+          description="Решения и проверка ответов — на сайте. PDF сборника — после покупки."
+      />
 
       <!-- Покупка -->
       <div class="mt-5 rounded-xl border border-default card-surface-alt p-4 sm:p-5">
@@ -119,7 +132,7 @@ async function buy() {
             <span class="flex-1 min-w-0 text-sm text-highlighted group-hover:text-primary transition-colors">{{ t.title ?? `Вариант ${t.position}` }}</span>
             <UIcon v-if="t.solved" name="i-lucide-circle-check" class="flex-none size-5 text-success" aria-label="Решено"/>
             <span v-else-if="t.isFree" class="flex-none text-xs font-medium text-success">бесплатно</span>
-            <UIcon v-else-if="!hasAccess" name="i-lucide-lock" class="flex-none size-4 text-dimmed" aria-label="Решение в платной части"/>
+            <UIcon v-else-if="!hasAccess && !passActive" name="i-lucide-lock" class="flex-none size-4 text-dimmed" aria-label="Решение в платной части"/>
           </NuxtLink>
         </li>
       </ol>
