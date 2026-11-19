@@ -72,34 +72,57 @@
     --ui-border: color-mix(in oklab, var(--ui-color-neutral-700) 80%, transparent);
     color-scheme: dark;
 
-    /* Тетрадный лист: клетка 22 px и красные поля. */
+    /* Тетрадный лист: по ширине колонки контента ровно 34 клетки, как в школьной тетради;
+       снаружи — чистые поля без клетки, красная линия — по правому краю листа. */
     --paper: var(--ui-color-neutral-950);
-    --paper-grid: rgb(128 160 255 / 0.045);
+    --paper-grid: rgb(128 160 255 / 0.05);
     --paper-margin: rgb(240 96 110 / 0.55);
-    /* Поля — справа от колонки контента; на узком экране прижаты к краю. */
-    --paper-margin-x: max(6px, calc((100vw - var(--ui-container)) / 2 + 0.25rem));
+    --sheet-cells: 34;
+    /* Красная линия полей — за столько клеток от правого края листа. */
+    --margin-cells: 4;
+    --sheet-width: min(100vw, var(--ui-container));
+    --sheet-left: calc((100vw - var(--sheet-width)) / 2);
+    --cell: calc(var(--sheet-width) / var(--sheet-cells));
 }
 
 body {
     background-color: var(--paper);
     background-image:
         radial-gradient(ellipse 90% 60% at 50% -10%, rgb(69 114 232 / 0.28), transparent 70%),
-        linear-gradient(180deg, transparent 40%, rgb(51 88 204 / 0.12) 100%),
-        linear-gradient(var(--paper-grid) 1px, transparent 1px),
-        linear-gradient(90deg, var(--paper-grid) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 22px 22px, 22px 22px;
+        linear-gradient(180deg, transparent 40%, rgb(51 88 204 / 0.12) 100%);
     background-attachment: fixed;
 }
 
-/* Красная линия полей, как в школьной тетради (справа). Под контентом, клики не перехватывает. */
+/* Клетка — только на листе. Слои под контентом (z-index −1), клики не перехватывают. */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: var(--sheet-left);
+    width: var(--sheet-width);
+    background-image:
+        linear-gradient(var(--paper-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--paper-grid) 1px, transparent 1px);
+    background-size: var(--cell) var(--cell);
+    /* Края листа не замыкаем: вертикальные линии сдвинуты на 1 px влево, поэтому линия по левому краю
+       уходит за лист, а у правого края её и не было — клетка просто обрывается, как на странице тетради. */
+    background-position: -1px 0, -1px 0;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Красная линия полей — на --margin-cells клеток левее правого края листа, точно по линии сетки. */
 body::before {
     content: '';
     position: fixed;
-    inset: 0 var(--paper-margin-x) 0 auto;
-    width: 0;
-    border-left: 2px solid var(--paper-margin);
+    top: 0;
+    bottom: 0;
+    left: calc(var(--sheet-left) + var(--cell) * (var(--sheet-cells) - var(--margin-cells)) - 1px);
+    width: 2px;
+    background: var(--paper-margin);
     pointer-events: none;
-    z-index: 0;
+    z-index: -1;
 }
 
 /* Карточки: лёгкий синий градиент и тень, чтобы блоки отделялись от «листа» и друг от друга. */
