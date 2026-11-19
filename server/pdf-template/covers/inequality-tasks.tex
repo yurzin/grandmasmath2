@@ -1,0 +1,61 @@
+% Титульный лист сборника «Решение неравенств ЕГЭ» (иллюстрация: метод интервалов).
+\begin{titlepage}
+\thispagestyle{empty}
+\begin{tikzpicture}[remember picture,overlay]
+  % фон
+  \shade[top color=titleblue!95!black, bottom color=accent!85!black]
+    (current page.south west) rectangle (current page.north east);
+  % тонкая сетка
+  \begin{scope}[opacity=0.07]
+    \foreach \x in {0,0.8,...,21.6} \draw[white,line width=0.3pt]
+      ($(current page.south west)+(\x,0)$) -- ++(0,29.7);
+    \foreach \y in {0,0.8,...,30} \draw[white,line width=0.3pt]
+      ($(current page.south west)+(0,\y)$) -- ++(21,0);
+  \end{scope}
+  % верхняя плашка
+  \node[anchor=north,text=white!80,font=\small\addfontfeatures{LetterSpace=12}]
+    at ($(current page.north)+(0,-2.2)$) {ЕДИНЫЙ ГОСУДАРСТВЕННЫЙ ЭКЗАМЕН · МАТЕМАТИКА · ПРОФИЛЬ};
+  \draw[white!60,line width=0.6pt] ($(current page.north)+(-4,-2.9)$) -- ++(8,0);
+
+  % заголовок
+  \node[anchor=north,text=white,align=center,font=\fontsize{34}{40}\selectfont\bfseries]
+    at ($(current page.north)+(0,-4.0)$) {Решение\\неравенств\\ЕГЭ};
+  \node[anchor=north,text=white!85,align=center,font=\large]
+    at ($(current page.north)+(0,-9.3)$) {Задача № 15 · \TaskCountText\ с подробными решениями};
+
+  % ===== иллюстрация: метод интервалов — ось с дугами, знаками и штриховкой =====
+  \begin{scope}[shift={($(current page.center)+(-5.6,-6.2)$)}]
+    \fill[white,opacity=0.10,rounded corners=10pt] (-0.8,-0.9) rectangle (12.0,8.4);
+    \draw[white,opacity=0.35,rounded corners=10pt,line width=0.8pt] (-0.8,-0.9) rectangle (12.0,8.4);
+    % ось
+    \draw[white,line width=1.4pt,-latex] (0,2.2) -- (11.2,2.2);
+    \node[white,font=\Large] at (11.5,2.2) {$x$};
+    % дуги и знаки
+    \foreach \a/\b/\sg in {0.3/2.6/+,2.6/5.4/-,5.4/8.2/+,8.2/10.8/-} {
+      \draw[white,opacity=0.55,line width=1pt] (\a,2.3) .. controls ({\a+(\b-\a)*0.2},3.6) and ({\b-(\b-\a)*0.2},3.6) .. (\b,2.3);
+      \node[white,font=\LARGE\bfseries] at ({(\a+\b)/2},3.65) {$\sg$};
+    }
+    % штриховка решений
+    \foreach \a/\b in {2.6/5.4,8.2/10.8}
+      \foreach \t in {0,0.25,...,2.6} \draw[yellow!80!orange,line width=1.2pt] ({\a+\t},2.25) -- ++(0.3,0.5);
+    % точки
+    \foreach \x/\f in {2.6/1,5.4/0,8.2/1} {
+      \ifnum\f=1 \fill[yellow!80!orange] (\x,2.2) circle (4pt); \else \filldraw[fill=titleblue,draw=yellow!80!orange,line width=1.5pt] (\x,2.2) circle (4pt); \fi
+    }
+    \node[white,font=\large] at (2.6,1.5) {$-1$};
+    \node[white,font=\large] at (5.4,1.5) {$0$};
+    \node[white,font=\large] at (8.2,1.5) {$\log_3 5$};
+    % формула
+    \node[circle,fill=white,text=titleblue,minimum size=1.9cm,font=\fontsize{26}{26}\selectfont\bfseries]
+      at (1.4,6.6) {$\le$};
+    \node[text=white,font=\large,anchor=west] at (3.0,6.6) {$\log_h f \;\to\; (h-1)(f-1)$};
+  \end{scope}
+
+  % подвал
+  \node[anchor=south,text=white!85,align=center,font=\normalsize]
+    at ($(current page.south)+(0,3.0)$) {Показательные · логарифмические · метод рационализации · метод интервалов};
+  \draw[white!60,line width=0.6pt] ($(current page.south)+(-4,2.6)$) -- ++(8,0);
+  \node[anchor=south,text=white!70,font=\small\addfontfeatures{LetterSpace=10}]
+    at ($(current page.south)+(0,1.7)$) {\CollectionYear};
+\end{tikzpicture}
+\end{titlepage}
